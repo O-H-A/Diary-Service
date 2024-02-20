@@ -24,6 +24,7 @@ async function bootstrap() {
   try {
     await app.listen(port);
     WinstonLogger.log(`Server is listening on port ${port} successfully`);
+    // console.log(`Server is listening on port ${port} successfully`);
   } catch (e) {
     WinstonLogger.error(e);
     WinstonLogger.error('Failed to start the app server');
