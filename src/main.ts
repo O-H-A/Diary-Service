@@ -2,11 +2,14 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
 import * as morgan from 'morgan';
+import { WinstonLogger } from './configs/winston.config';
 
 const port = process.env.PORT;
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: WinstonLogger,
+  });
 
   // cors settings
   const corsOptions: CorsOptions = {
@@ -20,9 +23,10 @@ async function bootstrap() {
   // run server
   try {
     await app.listen(port);
-    console.log(`Server is listening on port ${port} successfully`);
+    WinstonLogger.log(`Server is listening on port ${port} successfully`);
   } catch (e) {
-    console.error(e);
+    WinstonLogger.error(e);
+    WinstonLogger.error('Failed to start the app server');
   }
 }
 
