@@ -1,6 +1,6 @@
 import { ApiOperation, ApiResponse, ApiTags, ApiBody, ApiParam, ApiConsumes, ApiBearerAuth } from '@nestjs/swagger';
 
-export const ApiTagLocation = () => ApiTags('DIARY');
+export const ApiTagDiary = () => ApiTags('DIARY');
 
 export const ApiDescription = (summary: string, description?: string) => ApiOperation({ summary, description });
 

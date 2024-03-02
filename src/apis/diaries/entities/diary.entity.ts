@@ -15,13 +15,13 @@ export class DiaryEntity {
   @Column({ type: 'enum', enum: WeatherType, nullable: false })
   weather: WeatherType;
 
-  @Column({ type: 'varchar', nullable: false })
+  @Column({ type: 'varchar', nullable: true })
   content: string;
 
   @Column({ type: 'varchar', nullable: false })
   setDate: string;
 
-  @Column({ type: 'varchar', nullable: false })
+  @Column({ type: 'varchar', nullable: true })
   location: string;
 
   @Column({ type: 'boolean', default: true, nullable: false })

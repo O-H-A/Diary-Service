@@ -5,6 +5,8 @@ import * as morgan from 'morgan';
 import { WinstonLogger } from './configs/winston.config';
 import { SwaggerConfig } from './configs/swagger.config';
 import { SwaggerModule } from '@nestjs/swagger';
+import { TransformInterceptor } from './interceptors/response.interceptors';
+import { ValidationPipe } from '@nestjs/common';
 
 const port = process.env.PORT;
 
@@ -19,8 +21,14 @@ async function bootstrap() {
   };
   app.enableCors(corsOptions);
 
+  // use global pipe
+  app.useGlobalPipes(new ValidationPipe({ transform: true }));
+
   // app.use(morgan('combined')) // product
   app.use(morgan('dev')); // dev
+
+  // use global interceptors
+  app.useGlobalInterceptors(new TransformInterceptor());
 
   // run swagger
   const config = new SwaggerConfig().initializeOptions();
