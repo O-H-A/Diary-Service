@@ -130,6 +130,27 @@ export class DiaryService {
       if (!diary) {
         throw new NotFoundException('다이어리가 삭제되었거나 존재하지 않습니다');
       }
+
+      return;
+    } catch (e) {
+      this.logger.error(e);
+      throw e;
+    }
+  }
+
+  async deleteDiaryLike(diaryId: number, userId: number, transactionManager: EntityManager) {
+    try {
+      if (!diaryId || !userId) {
+        throw new BadRequestException('요청 값이 올바르지 않습니다');
+      }
+
+      const result = await transactionManager.delete(DiaryLikeEntity, { diaryId, userId });
+
+      if (result.affected === 0) {
+        throw new ConflictException('좋아요를 이미 취소했거나 다이어리가 존재하지 않습니다');
+      }
+      await transactionManager.query(`UPDATE public."Diary" SET "likes" = "likes" - 1 WHERE "diaryId" = ${diaryId}`);
+
       return;
     } catch (e) {
       this.logger.error(e);

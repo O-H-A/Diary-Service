@@ -64,7 +64,7 @@ export class DiaryController {
     return { message: '삭제 성공' };
   }
 
-  @ApiDescription('다이어리 삭제 API')
+  @ApiDescription('다이어리 상세 조회 API')
   @ApiParamDescription('diaryId', '숫자로 입력해주세요')
   @ApiBearerAuthAccessToken()
   @UseGuards(JwtAuthGuard)
@@ -90,5 +90,20 @@ export class DiaryController {
   ): Promise<{ message: string }> {
     await this.diaryService.createDiaryLike(diaryId, userId, transactionManager);
     return { message: '좋아요 생성 성공' };
+  }
+
+  @ApiDescription('다이어리 좋아요 취소 API')
+  @ApiParamDescription('diaryId', '숫자로 입력해주세요')
+  @ApiBearerAuthAccessToken()
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(TransactionInterceptor)
+  @Post('downlike/:diaryId')
+  async deleteDiaryLike(
+    @Param('diaryId') diaryId: number,
+    @GetUserId() userId: number,
+    @TransactionManager() transactionManager,
+  ): Promise<{ message: string }> {
+    await this.diaryService.deleteDiaryLike(diaryId, userId, transactionManager);
+    return { message: '좋아요 취소 성공' };
   }
 }
