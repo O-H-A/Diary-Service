@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Inject,
   Injectable,
@@ -14,6 +15,7 @@ import { CreateDiaryDto } from './dto/create-diary.dto';
 import { UpdateDiaryDto } from './dto/update-diary.dto';
 import { HttpService } from '@nestjs/axios';
 import { lastValueFrom } from 'rxjs';
+import { DiaryLikeEntity } from './entities/diary-likes.entity';
 
 @Injectable()
 export class DiaryService {
@@ -22,6 +24,8 @@ export class DiaryService {
     private readonly logger: LoggerService,
     @InjectRepository(DiaryEntity)
     private readonly diaryRepository: Repository<DiaryEntity>,
+    @InjectRepository(DiaryLikeEntity)
+    private readonly diaryLikeRepository: Repository<DiaryLikeEntity>,
     private readonly httpService: HttpService,
   ) {}
 
@@ -82,7 +86,6 @@ export class DiaryService {
         throw new NotFoundException('존재하지 않는 다이어리 입니다.');
       }
       // 다이어리 작성자 정보 불러오기
-      // const userId = diary.userId;
       const { userId, ...restData } = diary;
       const accessToken = token;
       const headers = { Authorization: `Bearer ${accessToken}` };
@@ -102,7 +105,39 @@ export class DiaryService {
     }
   }
 
-  private async isSameUser(currentUserId, diaryId) {
+  async createDiaryLike(diaryId: number, userId: number, transactionManager: EntityManager) {
+    try {
+      if (!diaryId || !userId) {
+        throw new BadRequestException('요청 값이 올바르지 않습니다');
+      }
+
+      // 좋아요를 이미 눌렀을 경우 에러처리
+      const likeInfo = await this.diaryLikeRepository.findOne({ where: { diaryId, userId } });
+      if (likeInfo) {
+        throw new ConflictException('좋아요를 이미 눌렀습니다');
+      }
+
+      // 좋아요 클릭 정보 저장
+      const newDiaryLike = new DiaryLikeEntity();
+      Object.assign(newDiaryLike, { diaryId, userId });
+      await transactionManager.save(newDiaryLike);
+
+      // 좋아요 클릭 수 업데이트 (1증가)
+      await transactionManager.query(`UPDATE public."Diary" SET "likes" = "likes" + 1 WHERE "diaryId" = ${diaryId}`);
+
+      // 다이어리 정보가 없을 경우 에러 처리
+      const diary = await this.diaryRepository.findOne({ where: { diaryId } });
+      if (!diary) {
+        throw new NotFoundException('다이어리가 삭제되었거나 존재하지 않습니다');
+      }
+      return;
+    } catch (e) {
+      this.logger.error(e);
+      throw e;
+    }
+  }
+
+  private async isSameUser(currentUserId: number, diaryId: number) {
     const diary = await this.diaryRepository.findOne({ where: { diaryId } });
     const diaryWriterId = diary.userId;
     return currentUserId == diaryWriterId;

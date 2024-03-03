@@ -76,4 +76,19 @@ export class DiaryController {
     const result = await this.diaryService.readDiaryDetail(diaryId, token);
     return { message: '상세 조회 성공', result };
   }
+
+  @ApiDescription('다이어리 좋아요 생성 API')
+  @ApiParamDescription('diaryId', '숫자로 입력해주세요')
+  @ApiBearerAuthAccessToken()
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(TransactionInterceptor)
+  @Post('uplike/:diaryId')
+  async createDiaryLike(
+    @Param('diaryId') diaryId: number,
+    @GetUserId() userId: number,
+    @TransactionManager() transactionManager,
+  ): Promise<{ message: string }> {
+    await this.diaryService.createDiaryLike(diaryId, userId, transactionManager);
+    return { message: '좋아요 생성 성공' };
+  }
 }
