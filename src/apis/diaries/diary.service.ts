@@ -1,8 +1,9 @@
-import { Inject, Injectable, Logger, LoggerService } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Inject, Injectable, Logger, LoggerService } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DiaryEntity } from './entities/diary.entity';
 import { EntityManager, Repository } from 'typeorm';
 import { CreateDiaryDto } from './dto/create-diary.dto';
+import { UpdateDiaryDto } from './dto/update-diary.dto';
 
 @Injectable()
 export class DiaryService {
@@ -23,5 +24,28 @@ export class DiaryService {
       this.logger.error(e);
       throw e;
     }
+  }
+
+  async updateDiary(diaryId: number, userId: number, dto: UpdateDiaryDto, transactionManager: EntityManager) {
+    try {
+      const isSameUser = await this.isSameUser(userId, diaryId);
+      if (!isSameUser) {
+        throw new ForbiddenException('포스트 수정 권한이 없습니다');
+      }
+      const result = await transactionManager.update(DiaryEntity, diaryId, { ...dto });
+      if (result.affected === 0) {
+        throw new BadRequestException('Diary update failed: Nothing updated');
+      }
+      return;
+    } catch (e) {
+      this.logger.error(e);
+      throw e;
+    }
+  }
+
+  private async isSameUser(currentUserId, diaryId) {
+    const diary = await this.diaryRepository.findOne({ where: { diaryId } });
+    const diaryWriterId = diary.userId;
+    return currentUserId == diaryWriterId;
   }
 }
