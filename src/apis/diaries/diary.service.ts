@@ -68,10 +68,16 @@ export class DiaryService {
       if (!diary) {
         throw new NotFoundException('다이어리가 이미 삭제되었거나 존재하지 않습니다');
       }
-      const result = await transactionManager.delete(DiaryEntity, diaryId);
+
+      // 다이어리 좋아요 정보 삭제 (만약 있다면)
+      await transactionManager.query(`DELETE FROM public."Diary-Like" WHERE "diaryId" = ${diaryId}`);
+
+      // 다이어리 삭제
+      const result = await transactionManager.delete(DiaryEntity, { diaryId });
       if (result.affected === 0) {
         throw new BadRequestException('Diary delete failed: Nothing deleted');
       }
+
       return;
     } catch (e) {
       this.logger.error(e);
