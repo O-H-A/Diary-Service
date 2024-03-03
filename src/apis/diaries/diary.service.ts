@@ -12,6 +12,8 @@ import { DiaryEntity } from './entities/diary.entity';
 import { EntityManager, Repository } from 'typeorm';
 import { CreateDiaryDto } from './dto/create-diary.dto';
 import { UpdateDiaryDto } from './dto/update-diary.dto';
+import { HttpService } from '@nestjs/axios';
+import { lastValueFrom } from 'rxjs';
 
 @Injectable()
 export class DiaryService {
@@ -20,6 +22,7 @@ export class DiaryService {
     private readonly logger: LoggerService,
     @InjectRepository(DiaryEntity)
     private readonly diaryRepository: Repository<DiaryEntity>,
+    private readonly httpService: HttpService,
   ) {}
 
   async createDiary(dto: CreateDiaryDto, userId: number, transactionManager: EntityManager) {
@@ -66,6 +69,33 @@ export class DiaryService {
         throw new BadRequestException('Diary delete failed: Nothing deleted');
       }
       return;
+    } catch (e) {
+      this.logger.error(e);
+      throw e;
+    }
+  }
+
+  async readDiaryDetail(diaryId: number, token: string) {
+    try {
+      const diary = await this.diaryRepository.findOne({ where: { diaryId } });
+      if (!diary) {
+        throw new NotFoundException('존재하지 않는 다이어리 입니다.');
+      }
+      // 다이어리 작성자 정보 불러오기
+      // const userId = diary.userId;
+      const { userId, ...restData } = diary;
+      const accessToken = token;
+      const headers = { Authorization: `Bearer ${accessToken}` };
+      let apiUrl;
+      if (process.env.NODE_ENV === 'dev') {
+        apiUrl = `http://${process.env.HOST}:3000/api/user/specificuser/${userId}`;
+      } else {
+        apiUrl = `http://${process.env.Eureka_HOST}/api/user/specificuser/${userId}`;
+      }
+
+      const diaryWriterInfo = await lastValueFrom(this.httpService.get(apiUrl, { headers }));
+
+      return { ...restData, writer: diaryWriterInfo.data.data };
     } catch (e) {
       this.logger.error(e);
       throw e;
