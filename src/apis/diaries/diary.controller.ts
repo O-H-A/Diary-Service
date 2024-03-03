@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Post, Put, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Param, Post, Put, UseGuards, UseInterceptors } from '@nestjs/common';
 import {
   ApiBearerAuthAccessToken,
   ApiDescription,
@@ -46,5 +46,20 @@ export class DiaryController {
   ): Promise<{ message: string }> {
     await this.diaryService.updateDiary(diaryId, userId, dto, transactionManager);
     return { message: '수정 성공' };
+  }
+
+  @ApiDescription('다이어리 삭제 API')
+  @ApiParamDescription('diaryId', '숫자로 입력해주세요')
+  @ApiBearerAuthAccessToken()
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(TransactionInterceptor)
+  @Delete('delete/:diaryId')
+  async deleteDiary(
+    @Param('diaryId') diaryId: number,
+    @GetUserId() userId: number,
+    @TransactionManager() transactionManager,
+  ): Promise<{ message: string }> {
+    await this.diaryService.deleteDiary(diaryId, userId, transactionManager);
+    return { message: '삭제 성공' };
   }
 }
