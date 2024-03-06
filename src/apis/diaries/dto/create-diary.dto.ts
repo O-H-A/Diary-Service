@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 import { WeatherType } from '../enums/weather.enum';
 
 export class CreateDiaryDto {
@@ -27,7 +27,6 @@ export class CreateDiaryDto {
 
   @ApiProperty()
   @IsOptional()
-  @IsBoolean()
   readonly isPublic?: boolean;
 
   @ApiProperty()

@@ -16,6 +16,8 @@ import { UpdateDiaryDto } from './dto/update-diary.dto';
 import { HttpService } from '@nestjs/axios';
 import { lastValueFrom } from 'rxjs';
 import { DiaryLikeEntity } from './entities/diary-likes.entity';
+import { ConfigService } from '@nestjs/config';
+import { DiaryFileEntity } from './entities/diary-file.entity';
 
 @Injectable()
 export class DiaryService {
@@ -27,12 +29,23 @@ export class DiaryService {
     @InjectRepository(DiaryLikeEntity)
     private readonly diaryLikeRepository: Repository<DiaryLikeEntity>,
     private readonly httpService: HttpService,
+    private configService: ConfigService,
   ) {}
 
-  async createDiary(dto: CreateDiaryDto, userId: number, transactionManager: EntityManager) {
+  async createDiary(dto: CreateDiaryDto, filename: string, userId: number, transactionManager: EntityManager) {
     try {
+      if (!filename) {
+        throw new BadRequestException('다이어리 사진은 필수입니다.');
+      }
+      const fileUrl = `http://${this.configService.get('Eureka_HOST')}/files/diary/${filename}`;
+      const newFile = new DiaryFileEntity();
+      Object.assign(newFile, { fileUrl });
+      const diaryFile = await transactionManager.save(newFile);
+      console.log(diaryFile);
       const newDiary = new DiaryEntity();
-      Object.assign(newDiary, { userId, ...dto });
+      console.log(newDiary);
+      Object.assign(newDiary, { userId, thumbnailFileId: diaryFile.fileId, ...dto });
+      console.log(newDiary);
       const diary = await transactionManager.save(newDiary);
       return diary;
     } catch (e) {

@@ -1,6 +1,19 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards, UseInterceptors } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 import {
   ApiBearerAuthAccessToken,
+  ApiBodyImageForm,
+  ApiConsumesMultiForm,
   ApiDescription,
   ApiParamDescription,
   ApiTagDiary,
@@ -13,6 +26,8 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { CreateDiaryDto } from './dto/create-diary.dto';
 import { TransactionInterceptor } from 'src/interceptors/transaction.interceptor';
 import { UpdateDiaryDto } from './dto/update-diary.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiBody, ApiConsumes } from '@nestjs/swagger';
 
 @ApiTagDiary()
 @Controller('api/diary')
@@ -22,14 +37,15 @@ export class DiaryController {
   @ApiDescription('다이어리 등록 API')
   @ApiBearerAuthAccessToken()
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(TransactionInterceptor)
+  @UseInterceptors(TransactionInterceptor, FileInterceptor('file'))
   @Post('create')
   async createDiary(
     @Body() dto: CreateDiaryDto,
     @GetUserId() userId: number,
     @TransactionManager() transactionManager,
+    @UploadedFile() file: Express.Multer.File,
   ): Promise<{ message: string; result: any }> {
-    const result = await this.diaryService.createDiary(dto, userId, transactionManager);
+    const result = await this.diaryService.createDiary(dto, file.filename, userId, transactionManager);
     return { message: '등록 성공', result };
   }
 
