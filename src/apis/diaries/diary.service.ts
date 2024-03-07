@@ -4,6 +4,7 @@ import {
   ForbiddenException,
   Inject,
   Injectable,
+  InternalServerErrorException,
   Logger,
   LoggerService,
   NotFoundException,
@@ -18,6 +19,8 @@ import { lastValueFrom } from 'rxjs';
 import { DiaryLikeEntity } from './entities/diary-likes.entity';
 import { ConfigService } from '@nestjs/config';
 import { DiaryFileEntity } from './entities/diary-file.entity';
+import { unlink } from 'fs/promises';
+import { UPLOAD_PATH } from 'src/utils/path';
 
 @Injectable()
 export class DiaryService {
@@ -74,7 +77,7 @@ export class DiaryService {
       if (!isSameUser) {
         throw new ForbiddenException('포스트 삭제 권한이 없습니다');
       }
-      const diary = await this.diaryRepository.findOne({ where: { diaryId } });
+      const diary = await this.diaryRepository.findOne({ where: { diaryId }, relations: { fileRelation: true } });
       if (!diary) {
         throw new NotFoundException('다이어리가 이미 삭제되었거나 존재하지 않습니다');
       }
@@ -87,6 +90,11 @@ export class DiaryService {
       if (result.affected === 0) {
         throw new BadRequestException('Diary delete failed: Nothing deleted');
       }
+
+      // 스토리지에 저장되어있는 이미지도 함께 삭제
+      const diaryFileUrl = diary.fileRelation[0].fileUrl;
+      const diaryFileName = diaryFileUrl.split('/').pop();
+      await unlink(`${UPLOAD_PATH}/${diaryFileName}`);
 
       return;
     } catch (e) {
