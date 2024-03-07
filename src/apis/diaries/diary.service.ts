@@ -43,11 +43,10 @@ export class DiaryService {
       const diaryFile = await transactionManager.save(newFile);
       console.log(diaryFile);
       const newDiary = new DiaryEntity();
-      console.log(newDiary);
-      Object.assign(newDiary, { userId, thumbnailFileId: diaryFile.fileId, ...dto });
-      console.log(newDiary);
+      Object.assign(newDiary, { userId, fileRelation: newFile, ...dto });
       const diary = await transactionManager.save(newDiary);
-      return diary;
+      console.log(diary);
+      return;
     } catch (e) {
       this.logger.error(e);
       throw e;
@@ -100,7 +99,7 @@ export class DiaryService {
 
   async readDiaryDetail(diaryId: number, token: string) {
     try {
-      const diary = await this.diaryRepository.findOne({ where: { diaryId } });
+      const diary = await this.diaryRepository.findOne({ where: { diaryId }, relations: { fileRelation: true } });
       if (!diary) {
         throw new NotFoundException('존재하지 않는 다이어리 입니다.');
       }

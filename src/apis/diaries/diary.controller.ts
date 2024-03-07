@@ -12,8 +12,6 @@ import {
 } from '@nestjs/common';
 import {
   ApiBearerAuthAccessToken,
-  ApiBodyImageForm,
-  ApiConsumesMultiForm,
   ApiDescription,
   ApiParamDescription,
   ApiTagDiary,
@@ -27,7 +25,6 @@ import { CreateDiaryDto } from './dto/create-diary.dto';
 import { TransactionInterceptor } from 'src/interceptors/transaction.interceptor';
 import { UpdateDiaryDto } from './dto/update-diary.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBody, ApiConsumes } from '@nestjs/swagger';
 
 @ApiTagDiary()
 @Controller('api/diary')

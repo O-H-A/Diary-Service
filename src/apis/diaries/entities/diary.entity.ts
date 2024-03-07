@@ -2,7 +2,6 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  JoinColumn,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -48,6 +47,6 @@ export class DiaryEntity {
   @UpdateDateColumn({ nullable: false })
   updatedAt: Date;
 
-  @OneToMany(() => DiaryFileEntity, (file) => file.diary)
-  files: DiaryFileEntity[];
+  @OneToMany(() => DiaryFileEntity, (file) => file.diaryRelation)
+  fileRelation: DiaryFileEntity[];
 }
