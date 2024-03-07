@@ -40,12 +40,10 @@ export class DiaryService {
       const fileUrl = `http://${this.configService.get('Eureka_HOST')}/files/diary/${filename}`;
       const newFile = new DiaryFileEntity();
       Object.assign(newFile, { fileUrl });
-      const diaryFile = await transactionManager.save(newFile);
-      console.log(diaryFile);
+      await transactionManager.save(newFile);
       const newDiary = new DiaryEntity();
-      Object.assign(newDiary, { userId, fileRelation: newFile, ...dto });
-      const diary = await transactionManager.save(newDiary);
-      console.log(diary);
+      Object.assign(newDiary, { userId, fileRelation: [newFile], ...dto });
+      await transactionManager.save(newDiary);
       return;
     } catch (e) {
       this.logger.error(e);
