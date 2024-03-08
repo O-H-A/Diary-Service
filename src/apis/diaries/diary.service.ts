@@ -105,6 +105,9 @@ export class DiaryService {
 
   async readDiaryDetail(diaryId: number, token: string) {
     try {
+      //
+      //조회수1증가
+      //
       const diary = await this.diaryRepository.findOne({ where: { diaryId }, relations: { fileRelation: true } });
       if (!diary) {
         throw new NotFoundException('존재하지 않는 다이어리 입니다.');
@@ -127,6 +130,26 @@ export class DiaryService {
       this.logger.error(e);
       throw e;
     }
+  }
+
+  async readUserDiary(userId: number, token: string) {
+    try {
+      // 사용자 정보 불러오기
+      const accessToken = token;
+      const headers = { Authorization: `Bearer ${accessToken}` };
+      let apiUrl;
+      if (process.env.NODE_ENV === 'dev') {
+        apiUrl = `http://${process.env.HOST}:3000/api/user/specificuser/${userId}`;
+      } else {
+        apiUrl = `http://${process.env.Eureka_HOST}/api/user/specificuser/${userId}`;
+      }
+
+      const writerInfo = await lastValueFrom(this.httpService.get(apiUrl, { headers }));
+
+      // 사용자 일기 전체 불러오기
+      const diaries = await this.diaryRepository.find({ where: { userId } });
+      return { writer: writerInfo.data.data, diaries };
+    } catch (error) {}
   }
 
   async createDiaryLike(diaryId: number, userId: number, transactionManager: EntityManager) {

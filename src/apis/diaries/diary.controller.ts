@@ -119,4 +119,24 @@ export class DiaryController {
     await this.diaryService.deleteDiaryLike(diaryId, userId, transactionManager);
     return { message: '좋아요 취소 성공' };
   }
+
+  @ApiDescription('사용자가 작성한 다이어리 전체 조회 API')
+  @ApiBearerAuthAccessToken()
+  @UseGuards(JwtAuthGuard)
+  @Get('my')
+  async readUserDiaries(
+    @GetUserId() userId: number,
+    @GetUserToken() token: string,
+  ): Promise<{ message: string; result: any }> {
+    const result = await this.diaryService.readUserDiary(userId, token);
+    return { message: '조회 성공', result };
+  }
+
+  @ApiDescription('사용자가 작성한 다이어리 조회 (달력표시) API')
+  @Get('readlike/:userId')
+  async readUserDiary() {}
+
+  @ApiDescription('다이어리 신고하기 API')
+  @Post('report')
+  async reportDiary() {}
 }
