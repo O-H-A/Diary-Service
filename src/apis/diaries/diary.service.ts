@@ -188,3 +188,5 @@ export class DiaryService {
     return currentUserId == diaryWriterId;
   }
 }
+
+// git account test
