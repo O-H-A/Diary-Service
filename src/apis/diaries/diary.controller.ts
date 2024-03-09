@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -25,6 +26,7 @@ import { CreateDiaryDto } from './dto/create-diary.dto';
 import { TransactionInterceptor } from 'src/interceptors/transaction.interceptor';
 import { UpdateDiaryDto } from './dto/update-diary.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiQuery } from '@nestjs/swagger';
 
 @ApiTagDiary()
 @Controller('api/diary')
@@ -135,21 +137,50 @@ export class DiaryController {
     return { message: '좋아요 정보 조회 성공', result };
   }
 
+  @ApiDescription('사용자가 작성한 다이어리 조회(달력표시용 - 월별) API')
+  @ApiQuery({ name: 'year', required: false })
+  @ApiQuery({ name: 'month', required: false })
+  @ApiBearerAuthAccessToken()
+  @UseGuards(JwtAuthGuard)
+  @Get('my/calender/month')
+  async readUserDiaryMonthly(
+    @GetUserId() userId: number,
+    @Query('year') year: number,
+    @Query('month') month: number,
+  ): Promise<{ message: string; result: any }> {
+    const result = await this.diaryService.readUserDiaryMonthly(userId, year, month);
+    return { message: '조회 성공', result };
+  }
+
+  @ApiDescription('사용자가 작성한 다이어리 조회(달력표시용 - 주별)  API')
+  @ApiBearerAuthAccessToken()
+  @UseGuards(JwtAuthGuard)
+  @Get('my/calender/week')
+  async readUserDiaryWeekly(@GetUserId() userId: number): Promise<{ message: string; result: any }> {
+    const result = await this.diaryService.readUserDiaryWeekly(userId);
+    return { message: '조회 성공', result };
+  }
+
+  @ApiDescription('사용자가 작성한 다이어리 조회(달력표시용 - 일별)  API')
+  @ApiBearerAuthAccessToken()
+  @UseGuards(JwtAuthGuard)
+  @Get('my/calender/day')
+  async readUserDiaryDaily(@GetUserId() userId: number): Promise<{ message: string; result: any }> {
+    const result = await this.diaryService.readUserDiaryDaily(userId);
+    return { message: '조회 성공', result };
+  }
+
   @ApiDescription('사용자가 작성한 다이어리 전체 조회 API')
   @ApiBearerAuthAccessToken()
   @UseGuards(JwtAuthGuard)
   @Get('my')
-  async readUserDiaries(
+  async readUserDiary(
     @GetUserId() userId: number,
     @GetUserToken() token: string,
   ): Promise<{ message: string; result: any }> {
     const result = await this.diaryService.readUserDiary(userId, token);
     return { message: '조회 성공', result };
   }
-
-  @ApiDescription('사용자가 작성한 다이어리 조회 (달력표시) API')
-  @Get('readlike/:u')
-  async readUserDiary() {}
 
   @ApiDescription('다이어리 신고하기 API')
   @Post('report')

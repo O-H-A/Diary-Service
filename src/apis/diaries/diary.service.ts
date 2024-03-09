@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DiaryEntity } from './entities/diary.entity';
-import { EntityManager, Repository } from 'typeorm';
+import { Between, EntityManager, Repository } from 'typeorm';
 import { CreateDiaryDto } from './dto/create-diary.dto';
 import { UpdateDiaryDto } from './dto/update-diary.dto';
 import { HttpService } from '@nestjs/axios';
@@ -20,6 +20,7 @@ import { ConfigService } from '@nestjs/config';
 import { DiaryFileEntity } from './entities/diary-file.entity';
 import { unlink } from 'fs/promises';
 import { UPLOAD_PATH } from 'src/utils/path';
+import * as moment from 'moment-timezone';
 
 @Injectable()
 export class DiaryService {
@@ -154,6 +155,54 @@ export class DiaryService {
       const diaries = await this.diaryRepository.find({ where: { userId } });
       return { writer: writerInfo.data.data, diaries };
     } catch (error) {}
+  }
+
+  async readUserDiaryMonthly(userId: number, year: number, month: number) {
+    try {
+      const currentDateTime = moment().tz('Asia/Seoul');
+      const currentYear = parseInt(currentDateTime.format('YYYY'), 10);
+      const currentMonth = parseInt(currentDateTime.format('MM'), 10);
+
+      const searchYear = year || currentYear;
+      const searchMonth = month || currentMonth;
+
+      const startOfMonth = moment({
+        year: searchYear,
+        month: searchMonth - 1,
+      })
+        .startOf('month')
+        .tz('Asia/Seoul')
+        .format('YYYYMMDD');
+
+      const endOfMonth = moment(startOfMonth).endOf('month').tz('Asia/Seoul').format('YYYYMMDD');
+
+      const allDiaries = await this.diaryRepository.find({
+        where: { setDate: Between(startOfMonth, endOfMonth) },
+        order: {
+          setDate: 'ASC',
+        },
+      });
+      return allDiaries;
+    } catch (e) {
+      this.logger.error(e);
+      throw e;
+    }
+  }
+
+  async readUserDiaryWeekly(userId: number) {
+    try {
+    } catch (e) {
+      this.logger.error(e);
+      throw e;
+    }
+  }
+
+  async readUserDiaryDaily(userId: number) {
+    try {
+    } catch (e) {
+      this.logger.error(e);
+      throw e;
+    }
   }
 
   async createDiaryLike(diaryId: number, userId: number, transactionManager: EntityManager) {

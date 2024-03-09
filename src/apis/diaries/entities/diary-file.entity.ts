@@ -1,12 +1,4 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { DiaryEntity } from './diary.entity';
 
 @Entity('Diary-File')
@@ -28,5 +20,5 @@ export class DiaryFileEntity {
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   })
-  diaryRelation: DiaryEntity;
+  diary: DiaryEntity;
 }
