@@ -120,6 +120,19 @@ export class DiaryController {
     return { message: '좋아요 취소 성공' };
   }
 
+  @ApiDescription('다이어리 좋아요 정보 조회 API')
+  @ApiParamDescription('diaryId', '숫자로 입력해주세요')
+  @ApiBearerAuthAccessToken()
+  @UseGuards(JwtAuthGuard)
+  @Get('getlike/:diaryId')
+  async getDiaryLike(
+    @Param('diaryId') diaryId: number,
+    @GetUserId() userId: number,
+  ): Promise<{ message: string; result: any }> {
+    const result = await this.diaryService.getDiaryLike(diaryId, userId);
+    return { message: '좋아요 정보 조회 성공', result };
+  }
+
   @ApiDescription('사용자가 작성한 다이어리 전체 조회 API')
   @ApiBearerAuthAccessToken()
   @UseGuards(JwtAuthGuard)
@@ -133,7 +146,7 @@ export class DiaryController {
   }
 
   @ApiDescription('사용자가 작성한 다이어리 조회 (달력표시) API')
-  @Get('readlike/:userId')
+  @Get('readlike/:u')
   async readUserDiary() {}
 
   @ApiDescription('다이어리 신고하기 API')

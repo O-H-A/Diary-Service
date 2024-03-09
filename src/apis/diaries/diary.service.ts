@@ -205,6 +205,16 @@ export class DiaryService {
     }
   }
 
+  async getDiaryLike(diaryId: number, userId: number) {
+    try {
+      const allDiaryLikes = await this.diaryLikeRepository.find({ where: { diaryId } });
+      return { DiaryLikesInfo: allDiaryLikes, currentUserId: userId.toString() };
+    } catch (e) {
+      this.logger.error(e);
+      throw e;
+    }
+  }
+
   private async isSameUser(currentUserId: number, diaryId: number) {
     const diary = await this.diaryRepository.findOne({ where: { diaryId } });
     const diaryWriterId = diary.userId;
