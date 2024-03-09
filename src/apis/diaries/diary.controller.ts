@@ -81,12 +81,14 @@ export class DiaryController {
   @ApiParamDescription('diaryId', '숫자로 입력해주세요')
   @ApiBearerAuthAccessToken()
   @UseGuards(JwtAuthGuard)
+  @UseInterceptors(TransactionInterceptor)
   @Get('read/:diaryId')
   async readDiaryDetail(
     @Param('diaryId') diaryId: number,
     @GetUserToken() token: string,
+    @TransactionManager() transactionManager,
   ): Promise<{ message: string; result: any }> {
-    const result = await this.diaryService.readDiaryDetail(diaryId, token);
+    const result = await this.diaryService.readDiaryDetail(diaryId, token, transactionManager);
     return { message: '상세 조회 성공', result };
   }
 
