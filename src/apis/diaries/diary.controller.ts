@@ -145,19 +145,29 @@ export class DiaryController {
   @Get('my/calender/month')
   async readUserDiaryMonthly(
     @GetUserId() userId: number,
+    @GetUserToken() token: string,
     @Query('year') year: number,
     @Query('month') month: number,
   ): Promise<{ message: string; result: any }> {
-    const result = await this.diaryService.readUserDiaryMonthly(userId, year, month);
+    const result = await this.diaryService.readUserDiaryMonthly(userId, year, month, token);
     return { message: '조회 성공', result };
   }
 
   @ApiDescription('사용자가 작성한 다이어리 조회(달력표시용 - 주별)  API')
   @ApiBearerAuthAccessToken()
+  @ApiQuery({ name: 'year', required: false })
+  @ApiQuery({ name: 'month', required: false })
+  @ApiQuery({ name: 'week', required: false })
   @UseGuards(JwtAuthGuard)
   @Get('my/calender/week')
-  async readUserDiaryWeekly(@GetUserId() userId: number): Promise<{ message: string; result: any }> {
-    const result = await this.diaryService.readUserDiaryWeekly(userId);
+  async readUserDiaryWeekly(
+    @GetUserId() userId: number,
+    @GetUserToken() token: string,
+    @Query('year') year: number,
+    @Query('month') month: number,
+    @Query('week') week: number,
+  ): Promise<{ message: string; result: any }> {
+    const result = await this.diaryService.readUserDiaryWeekly(userId, token, year, month, week);
     return { message: '조회 성공', result };
   }
 

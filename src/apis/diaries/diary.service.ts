@@ -157,8 +157,21 @@ export class DiaryService {
     } catch (error) {}
   }
 
-  async readUserDiaryMonthly(userId: number, year: number, month: number) {
+  async readUserDiaryMonthly(userId: number, year: number, month: number, token: string) {
     try {
+      // 사용자 정보 불러오기
+      const accessToken = token;
+      const headers = { Authorization: `Bearer ${accessToken}` };
+      let apiUrl;
+      if (process.env.NODE_ENV === 'dev') {
+        apiUrl = `http://${process.env.HOST}:3000/api/user/specificuser/${userId}`;
+      } else {
+        apiUrl = `http://${process.env.Eureka_HOST}/api/user/specificuser/${userId}`;
+      }
+
+      const writerInfo = await lastValueFrom(this.httpService.get(apiUrl, { headers }));
+
+      // 다이어리 정보 불러오기
       const currentDateTime = moment().tz('Asia/Seoul');
       const currentYear = parseInt(currentDateTime.format('YYYY'), 10);
       const currentMonth = parseInt(currentDateTime.format('MM'), 10);
@@ -182,15 +195,67 @@ export class DiaryService {
           setDate: 'ASC',
         },
       });
-      return allDiaries;
+      return { writer: writerInfo.data.data, diaries: allDiaries };
     } catch (e) {
       this.logger.error(e);
       throw e;
     }
   }
 
-  async readUserDiaryWeekly(userId: number) {
+  async readUserDiaryWeekly(userId: number, token: string, year: number, month: number, week: number) {
     try {
+      // 사용자 정보 불러오기
+      const accessToken = token;
+      const headers = { Authorization: `Bearer ${accessToken}` };
+      let apiUrl;
+      if (process.env.NODE_ENV === 'dev') {
+        apiUrl = `http://${process.env.HOST}:3000/api/user/specificuser/${userId}`;
+      } else {
+        apiUrl = `http://${process.env.Eureka_HOST}/api/user/specificuser/${userId}`;
+      }
+
+      const writerInfo = await lastValueFrom(this.httpService.get(apiUrl, { headers }));
+
+      // 다이어리 정보 불러오기
+      const currentDateTime = moment().tz('Asia/Seoul');
+      const currentYear = parseInt(currentDateTime.format('YYYY'), 10);
+      const currentMonth = parseInt(currentDateTime.format('MM'), 10);
+
+      // 이번 달의 첫 번째 날
+      const firstDayOfMonth = currentDateTime.clone().startOf('month');
+      // 이번 달의 첫째 주의 첫 번째 날 (월요일)
+      const firstMondayOfMonth = firstDayOfMonth.clone().startOf('isoWeek');
+      // 오늘이 몇 번째 주인지 계산
+      const currentWeekNumber = currentDateTime.diff(firstMondayOfMonth, 'weeks') + 1;
+
+      const searchYear = year || currentYear;
+      const searchMonth = month || currentMonth;
+      const searchWeek = week || currentWeekNumber;
+
+      const startOfMonth = moment({
+        year: searchYear,
+        month: searchMonth - 1,
+      })
+        .startOf('month')
+        .tz('Asia/Seoul');
+
+      // searchweek째 주의 첫번째 날 구하기
+      const startOfSearchWeek = startOfMonth
+        .clone()
+        .startOf('isoWeek')
+        .add(searchWeek - 1, 'week');
+
+      // searchweek째 주의 마지막 날 구하기
+      const endOfSearchWeek = startOfSearchWeek.clone().endOf('isoWeek');
+
+      const allDiaries = await this.diaryRepository.find({
+        where: { setDate: Between(startOfSearchWeek.format('YYYYMMDD'), endOfSearchWeek.format('YYYYMMDD')) },
+        order: {
+          setDate: 'ASC',
+        },
+      });
+
+      return { writer: writerInfo.data.data, diaries: allDiaries };
     } catch (e) {
       this.logger.error(e);
       throw e;
