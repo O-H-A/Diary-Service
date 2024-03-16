@@ -54,12 +54,35 @@ export class DiaryService {
     }
   }
 
-  async updateDiary(diaryId: number, userId: number, dto: UpdateDiaryDto, transactionManager: EntityManager) {
+  async updateDiary(
+    diaryId: number,
+    filename: string | undefined,
+    userId: number,
+    dto: UpdateDiaryDto,
+    transactionManager: EntityManager,
+  ) {
     try {
       const isSameUser = await this.isSameUser(userId, diaryId);
       if (!isSameUser) {
         throw new ForbiddenException('다이어리 수정 권한이 없습니다');
       }
+
+      // 다이어리 사진 변경
+      if (filename !== undefined) {
+        const fileUrl = `http://${this.configService.get('Eureka_HOST')}/files/diary/${filename}`;
+        const diaryFile = await transactionManager.findOne(DiaryEntity, {
+          where: { diaryId },
+          relations: { fileRelation: true },
+        });
+        const fileId = diaryFile.fileRelation[0].fileId;
+        const previousFileUrl = diaryFile.fileRelation[0].fileUrl;
+        await transactionManager.update(DiaryFileEntity, fileId, { fileUrl });
+
+        // 스토리지에 저장되어있는 이미지 삭제
+        const diaryFileName = previousFileUrl.split('/').pop();
+        await unlink(`${UPLOAD_PATH}/${diaryFileName}`);
+      }
+
       const result = await transactionManager.update(DiaryEntity, diaryId, { ...dto });
       if (result.affected === 0) {
         throw new BadRequestException('Diary update failed: Nothing updated');
@@ -77,7 +100,11 @@ export class DiaryService {
       if (!isSameUser) {
         throw new ForbiddenException('다이어리 삭제 권한이 없습니다');
       }
-      const diary = await this.diaryRepository.findOne({ where: { diaryId }, relations: { fileRelation: true } });
+
+      const diary = await transactionManager.findOne(DiaryEntity, {
+        where: { diaryId },
+        relations: { fileRelation: true },
+      });
       if (!diary) {
         throw new NotFoundException('다이어리가 이미 삭제되었거나 존재하지 않습니다');
       }

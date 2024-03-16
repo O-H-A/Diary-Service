@@ -67,15 +67,21 @@ export class DiaryController {
   @ApiResponseErrorBadRequest('수정된 다이어리 없음')
   @ApiBearerAuthAccessToken()
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(TransactionInterceptor)
+  @UseInterceptors(TransactionInterceptor, FileInterceptor('file'))
   @Put('update/:diaryId')
   async updateDiary(
     @Param('diaryId') diaryId: number,
     @Body() dto: UpdateDiaryDto,
     @GetUserId() userId: number,
     @TransactionManager() transactionManager,
+    @UploadedFile() file: Express.Multer.File,
   ): Promise<{ message: string }> {
-    await this.diaryService.updateDiary(diaryId, userId, dto, transactionManager);
+    if (file !== undefined) {
+      await this.diaryService.updateDiary(diaryId, file.filename, userId, dto, transactionManager);
+    } else {
+      await this.diaryService.updateDiary(diaryId, undefined, userId, dto, transactionManager);
+    }
+
     return { message: '수정 성공' };
   }
 
