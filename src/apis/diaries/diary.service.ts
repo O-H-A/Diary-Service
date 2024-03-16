@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   ForbiddenException,
+  HttpStatus,
   Inject,
   Injectable,
   Logger,
@@ -10,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DiaryEntity } from './entities/diary.entity';
-import { Between, EntityManager, Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { CreateDiaryDto } from './dto/create-diary.dto';
 import { UpdateDiaryDto } from './dto/update-diary.dto';
 import { HttpService } from '@nestjs/axios';
@@ -20,7 +21,6 @@ import { ConfigService } from '@nestjs/config';
 import { DiaryFileEntity } from './entities/diary-file.entity';
 import { unlink } from 'fs/promises';
 import { UPLOAD_PATH } from 'src/utils/path';
-import * as moment from 'moment-timezone';
 
 @Injectable()
 export class DiaryService {
@@ -58,7 +58,7 @@ export class DiaryService {
     try {
       const isSameUser = await this.isSameUser(userId, diaryId);
       if (!isSameUser) {
-        throw new ForbiddenException('포스트 수정 권한이 없습니다');
+        throw new ForbiddenException('다이어리 수정 권한이 없습니다');
       }
       const result = await transactionManager.update(DiaryEntity, diaryId, { ...dto });
       if (result.affected === 0) {
@@ -75,7 +75,7 @@ export class DiaryService {
     try {
       const isSameUser = await this.isSameUser(userId, diaryId);
       if (!isSameUser) {
-        throw new ForbiddenException('포스트 삭제 권한이 없습니다');
+        throw new ForbiddenException('다이어리 삭제 권한이 없습니다');
       }
       const diary = await this.diaryRepository.findOne({ where: { diaryId }, relations: { fileRelation: true } });
       if (!diary) {
@@ -149,123 +149,24 @@ export class DiaryService {
         apiUrl = `http://${process.env.Eureka_HOST}/api/user/specificuser/${userId}`;
       }
 
-      const writerInfo = await lastValueFrom(this.httpService.get(apiUrl, { headers }));
+      const writerInfo = await lastValueFrom(this.httpService.get(apiUrl, { headers })); // 사용자 정보
 
       // 사용자 일기 전체 불러오기
-      const diaries = await this.diaryRepository.find({ where: { userId } });
+      const diaries = await this.diaryRepository.find({
+        where: { userId },
+        relations: { fileRelation: true },
+        order: {
+          setDate: 'DESC',
+        },
+      });
       return { writer: writerInfo.data.data, diaries };
-    } catch (error) {}
-  }
-
-  async readUserDiaryMonthly(userId: number, year: number, month: number, token: string) {
-    try {
-      // 사용자 정보 불러오기
-      const accessToken = token;
-      const headers = { Authorization: `Bearer ${accessToken}` };
-      let apiUrl;
-      if (process.env.NODE_ENV === 'dev') {
-        apiUrl = `http://${process.env.HOST}:3000/api/user/specificuser/${userId}`;
-      } else {
-        apiUrl = `http://${process.env.Eureka_HOST}/api/user/specificuser/${userId}`;
+    } catch (e) {
+      this.logger.error(e);
+      if (e.response && e.response.data) {
+        if (e.response.data.statusCode === HttpStatus.NOT_FOUND) {
+          throw new NotFoundException(`${e.response.data.message}`);
+        }
       }
-
-      const writerInfo = await lastValueFrom(this.httpService.get(apiUrl, { headers }));
-
-      // 다이어리 정보 불러오기
-      const currentDateTime = moment().tz('Asia/Seoul');
-      const currentYear = parseInt(currentDateTime.format('YYYY'), 10);
-      const currentMonth = parseInt(currentDateTime.format('MM'), 10);
-
-      const searchYear = year || currentYear;
-      const searchMonth = month || currentMonth;
-
-      const startOfMonth = moment({
-        year: searchYear,
-        month: searchMonth - 1,
-      })
-        .startOf('month')
-        .tz('Asia/Seoul')
-        .format('YYYYMMDD');
-
-      const endOfMonth = moment(startOfMonth).endOf('month').tz('Asia/Seoul').format('YYYYMMDD');
-
-      const allDiaries = await this.diaryRepository.find({
-        where: { setDate: Between(startOfMonth, endOfMonth) },
-        order: {
-          setDate: 'ASC',
-        },
-      });
-      return { writer: writerInfo.data.data, diaries: allDiaries };
-    } catch (e) {
-      this.logger.error(e);
-      throw e;
-    }
-  }
-
-  async readUserDiaryWeekly(userId: number, token: string, year: number, month: number, week: number) {
-    try {
-      // 사용자 정보 불러오기
-      const accessToken = token;
-      const headers = { Authorization: `Bearer ${accessToken}` };
-      let apiUrl;
-      if (process.env.NODE_ENV === 'dev') {
-        apiUrl = `http://${process.env.HOST}:3000/api/user/specificuser/${userId}`;
-      } else {
-        apiUrl = `http://${process.env.Eureka_HOST}/api/user/specificuser/${userId}`;
-      }
-
-      const writerInfo = await lastValueFrom(this.httpService.get(apiUrl, { headers }));
-
-      // 다이어리 정보 불러오기
-      const currentDateTime = moment().tz('Asia/Seoul');
-      const currentYear = parseInt(currentDateTime.format('YYYY'), 10);
-      const currentMonth = parseInt(currentDateTime.format('MM'), 10);
-
-      // 이번 달의 첫 번째 날
-      const firstDayOfMonth = currentDateTime.clone().startOf('month');
-      // 이번 달의 첫째 주의 첫 번째 날 (월요일)
-      const firstMondayOfMonth = firstDayOfMonth.clone().startOf('isoWeek');
-      // 오늘이 몇 번째 주인지 계산
-      const currentWeekNumber = currentDateTime.diff(firstMondayOfMonth, 'weeks') + 1;
-
-      const searchYear = year || currentYear;
-      const searchMonth = month || currentMonth;
-      const searchWeek = week || currentWeekNumber;
-
-      const startOfMonth = moment({
-        year: searchYear,
-        month: searchMonth - 1,
-      })
-        .startOf('month')
-        .tz('Asia/Seoul');
-
-      // searchweek째 주의 첫번째 날 구하기
-      const startOfSearchWeek = startOfMonth
-        .clone()
-        .startOf('isoWeek')
-        .add(searchWeek - 1, 'week');
-
-      // searchweek째 주의 마지막 날 구하기
-      const endOfSearchWeek = startOfSearchWeek.clone().endOf('isoWeek');
-
-      const allDiaries = await this.diaryRepository.find({
-        where: { setDate: Between(startOfSearchWeek.format('YYYYMMDD'), endOfSearchWeek.format('YYYYMMDD')) },
-        order: {
-          setDate: 'ASC',
-        },
-      });
-
-      return { writer: writerInfo.data.data, diaries: allDiaries };
-    } catch (e) {
-      this.logger.error(e);
-      throw e;
-    }
-  }
-
-  async readUserDiaryDaily(userId: number) {
-    try {
-    } catch (e) {
-      this.logger.error(e);
       throw e;
     }
   }

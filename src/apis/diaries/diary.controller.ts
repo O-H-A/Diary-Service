@@ -6,7 +6,6 @@ import {
   Param,
   Post,
   Put,
-  Query,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -15,6 +14,15 @@ import {
   ApiBearerAuthAccessToken,
   ApiDescription,
   ApiParamDescription,
+  ApiResponseCreateDiary,
+  ApiResponseDeleteDiary,
+  ApiResponseDiary,
+  ApiResponseDiaryDetail,
+  ApiResponseErrorBadRequest,
+  ApiResponseErrorForbidden,
+  ApiResponseErrorNotFound,
+  ApiResponseGetDiaryLike,
+  ApiResponseUpdateDiary,
   ApiTagDiary,
   GetUserId,
   GetUserToken,
@@ -26,7 +34,6 @@ import { CreateDiaryDto } from './dto/create-diary.dto';
 import { TransactionInterceptor } from 'src/interceptors/transaction.interceptor';
 import { UpdateDiaryDto } from './dto/update-diary.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiQuery } from '@nestjs/swagger';
 
 @ApiTagDiary()
 @Controller('api/diary')
@@ -35,6 +42,8 @@ export class DiaryController {
 
   @ApiDescription('다이어리 등록 API')
   @ApiBearerAuthAccessToken()
+  @ApiResponseCreateDiary()
+  @ApiResponseErrorBadRequest('다이어리 사진은 필수')
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(TransactionInterceptor, FileInterceptor('file'))
   @Post('create')
@@ -50,6 +59,9 @@ export class DiaryController {
 
   @ApiDescription('다이어리 수정 API')
   @ApiParamDescription('diaryId', '숫자로 입력해주세요')
+  @ApiResponseUpdateDiary()
+  @ApiResponseErrorForbidden('다이어리 수정 권한이 없음')
+  @ApiResponseErrorBadRequest('수정된 다이어리 없음')
   @ApiBearerAuthAccessToken()
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(TransactionInterceptor)
@@ -66,6 +78,10 @@ export class DiaryController {
 
   @ApiDescription('다이어리 삭제 API')
   @ApiParamDescription('diaryId', '숫자로 입력해주세요')
+  @ApiResponseDeleteDiary()
+  @ApiResponseErrorForbidden('다이어리 삭제 권한이 없음')
+  @ApiResponseErrorNotFound('다이어리가 이미 삭제되었거나 존재하지 않음')
+  @ApiResponseErrorBadRequest('삭제된 다이어리 없음')
   @ApiBearerAuthAccessToken()
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(TransactionInterceptor)
@@ -81,6 +97,8 @@ export class DiaryController {
 
   @ApiDescription('다이어리 상세 조회 API')
   @ApiParamDescription('diaryId', '숫자로 입력해주세요')
+  @ApiResponseDiaryDetail()
+  @ApiResponseErrorNotFound('존재하지 않는 다이어리')
   @ApiBearerAuthAccessToken()
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(TransactionInterceptor)
@@ -94,8 +112,23 @@ export class DiaryController {
     return { message: '상세 조회 성공', result };
   }
 
+  @ApiDescription('사용자가 작성한 다이어리 조회 API - 전체 기간')
+  @ApiResponseDiary()
+  @ApiResponseErrorNotFound('존재하지 않는 사용자')
+  @ApiBearerAuthAccessToken()
+  @UseGuards(JwtAuthGuard)
+  @Get('my')
+  async readUserDiary(
+    @GetUserId() userId: number,
+    @GetUserToken() token: string,
+  ): Promise<{ message: string; result: any }> {
+    const result = await this.diaryService.readUserDiary(userId, token);
+    return { message: '전체 기간 조회 성공', result };
+  }
+
   @ApiDescription('다이어리 좋아요 생성 API')
   @ApiParamDescription('diaryId', '숫자로 입력해주세요')
+  @ApiResponseCreateDiary()
   @ApiBearerAuthAccessToken()
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(TransactionInterceptor)
@@ -111,6 +144,7 @@ export class DiaryController {
 
   @ApiDescription('다이어리 좋아요 취소 API')
   @ApiParamDescription('diaryId', '숫자로 입력해주세요')
+  @ApiResponseDeleteDiary()
   @ApiBearerAuthAccessToken()
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(TransactionInterceptor)
@@ -126,6 +160,7 @@ export class DiaryController {
 
   @ApiDescription('다이어리 좋아요 정보 조회 API')
   @ApiParamDescription('diaryId', '숫자로 입력해주세요')
+  @ApiResponseGetDiaryLike()
   @ApiBearerAuthAccessToken()
   @UseGuards(JwtAuthGuard)
   @Get('getlike/:diaryId')
@@ -135,61 +170,6 @@ export class DiaryController {
   ): Promise<{ message: string; result: any }> {
     const result = await this.diaryService.getDiaryLike(diaryId, userId);
     return { message: '좋아요 정보 조회 성공', result };
-  }
-
-  @ApiDescription('사용자가 작성한 다이어리 조회(달력표시용 - 월별) API')
-  @ApiQuery({ name: 'year', required: false })
-  @ApiQuery({ name: 'month', required: false })
-  @ApiBearerAuthAccessToken()
-  @UseGuards(JwtAuthGuard)
-  @Get('my/calender/month')
-  async readUserDiaryMonthly(
-    @GetUserId() userId: number,
-    @GetUserToken() token: string,
-    @Query('year') year: number,
-    @Query('month') month: number,
-  ): Promise<{ message: string; result: any }> {
-    const result = await this.diaryService.readUserDiaryMonthly(userId, year, month, token);
-    return { message: '조회 성공', result };
-  }
-
-  @ApiDescription('사용자가 작성한 다이어리 조회(달력표시용 - 주별)  API')
-  @ApiBearerAuthAccessToken()
-  @ApiQuery({ name: 'year', required: false })
-  @ApiQuery({ name: 'month', required: false })
-  @ApiQuery({ name: 'week', required: false })
-  @UseGuards(JwtAuthGuard)
-  @Get('my/calender/week')
-  async readUserDiaryWeekly(
-    @GetUserId() userId: number,
-    @GetUserToken() token: string,
-    @Query('year') year: number,
-    @Query('month') month: number,
-    @Query('week') week: number,
-  ): Promise<{ message: string; result: any }> {
-    const result = await this.diaryService.readUserDiaryWeekly(userId, token, year, month, week);
-    return { message: '조회 성공', result };
-  }
-
-  @ApiDescription('사용자가 작성한 다이어리 조회(달력표시용 - 일별)  API')
-  @ApiBearerAuthAccessToken()
-  @UseGuards(JwtAuthGuard)
-  @Get('my/calender/day')
-  async readUserDiaryDaily(@GetUserId() userId: number): Promise<{ message: string; result: any }> {
-    const result = await this.diaryService.readUserDiaryDaily(userId);
-    return { message: '조회 성공', result };
-  }
-
-  @ApiDescription('사용자가 작성한 다이어리 전체 조회 API')
-  @ApiBearerAuthAccessToken()
-  @UseGuards(JwtAuthGuard)
-  @Get('my')
-  async readUserDiary(
-    @GetUserId() userId: number,
-    @GetUserToken() token: string,
-  ): Promise<{ message: string; result: any }> {
-    const result = await this.diaryService.readUserDiary(userId, token);
-    return { message: '조회 성공', result };
   }
 
   @ApiDescription('다이어리 신고하기 API')
