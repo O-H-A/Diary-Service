@@ -248,6 +248,7 @@ export const ApiReponseDeleteDiaryLike = () =>
 
 export const ApiResponseGetDiaryLike = () =>
   ApiResponse({
+    description: 'currentUserId: 현재 접속하고 있는 사용자의 아이디',
     status: 200,
     content: {
       'application/json': {

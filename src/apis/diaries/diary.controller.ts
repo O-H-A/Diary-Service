@@ -14,11 +14,14 @@ import {
   ApiBearerAuthAccessToken,
   ApiDescription,
   ApiParamDescription,
+  ApiReponseDeleteDiaryLike,
   ApiResponseCreateDiary,
+  ApiResponseCreateDiaryLike,
   ApiResponseDeleteDiary,
   ApiResponseDiary,
   ApiResponseDiaryDetail,
   ApiResponseErrorBadRequest,
+  ApiResponseErrorConflict,
   ApiResponseErrorForbidden,
   ApiResponseErrorNotFound,
   ApiResponseGetDiaryLike,
@@ -126,9 +129,12 @@ export class DiaryController {
     return { message: '전체 기간 조회 성공', result };
   }
 
-  @ApiDescription('다이어리 좋아요 생성 API')
+  @ApiDescription('다이어리 좋아요 생성 API', '좋아요 클릭 시 사용되는 api')
   @ApiParamDescription('diaryId', '숫자로 입력해주세요')
-  @ApiResponseCreateDiary()
+  @ApiResponseCreateDiaryLike()
+  @ApiResponseErrorBadRequest('diaryId 혹은 userId가 요청되지 않았을 경우')
+  @ApiResponseErrorConflict('좋아요를 이미 눌렀을 경우')
+  @ApiResponseErrorNotFound('다이어리가 이미 삭제되었거나 존재하지 않을 경우')
   @ApiBearerAuthAccessToken()
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(TransactionInterceptor)
@@ -142,13 +148,15 @@ export class DiaryController {
     return { message: '좋아요 생성 성공' };
   }
 
-  @ApiDescription('다이어리 좋아요 취소 API')
+  @ApiDescription('다이어리 좋아요 취소 API', '좋아요 취소 시 사용되는 api')
   @ApiParamDescription('diaryId', '숫자로 입력해주세요')
-  @ApiResponseDeleteDiary()
+  @ApiReponseDeleteDiaryLike()
+  @ApiResponseErrorBadRequest('diaryId 혹은 userId가 요청되지 않았을 경우')
+  @ApiResponseErrorConflict('좋아요가 이미 취소되었거나 다이어리가 존재하지 않을 경우')
   @ApiBearerAuthAccessToken()
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(TransactionInterceptor)
-  @Post('downlike/:diaryId')
+  @Delete('downlike/:diaryId')
   async deleteDiaryLike(
     @Param('diaryId') diaryId: number,
     @GetUserId() userId: number,
@@ -158,7 +166,10 @@ export class DiaryController {
     return { message: '좋아요 취소 성공' };
   }
 
-  @ApiDescription('다이어리 좋아요 정보 조회 API')
+  @ApiDescription(
+    '다이어리 좋아요 정보 조회 API',
+    '다이어리 상세 조회 시 사용자가 해당 다이어리에 이미 좋아요를 눌렀는지 확인하는 용도입니다. 해당 다이어리에 좋아요를 누른 모든 사용자 아이디가 응답값으로 반환됩니다. 좋아요가 아직 없는 다이어리일 경우 빈 배열이 응답값으로 반환됩니다',
+  )
   @ApiParamDescription('diaryId', '숫자로 입력해주세요')
   @ApiResponseGetDiaryLike()
   @ApiBearerAuthAccessToken()
@@ -171,8 +182,4 @@ export class DiaryController {
     const result = await this.diaryService.getDiaryLike(diaryId, userId);
     return { message: '좋아요 정보 조회 성공', result };
   }
-
-  @ApiDescription('다이어리 신고하기 API')
-  @Post('report')
-  async reportDiary() {}
 }
