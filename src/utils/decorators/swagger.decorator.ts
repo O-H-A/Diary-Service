@@ -248,7 +248,8 @@ export const ApiReponseDeleteDiaryLike = () =>
 
 export const ApiResponseGetDiaryLike = () =>
   ApiResponse({
-    description: 'currentUserId: 현재 접속하고 있는 사용자의 아이디',
+    description:
+      'currentUserId: 현재 접속하고 있는 사용자의 아이디, userId: 해당 다이어리에 좋아요를 누른 사용자 아이디',
     status: 200,
     content: {
       'application/json': {
@@ -261,6 +262,11 @@ export const ApiResponseGetDiaryLike = () =>
                 likesId: 15,
                 diaryId: '34',
                 userId: '16',
+              },
+              {
+                likesId: 16,
+                diaryId: '34',
+                userId: '17',
               },
             ],
             currentUserId: '16',
