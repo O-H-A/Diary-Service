@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   ForbiddenException,
+  HttpStatus,
   Inject,
   Injectable,
   Logger,
@@ -16,6 +17,10 @@ import { UpdateDiaryDto } from './dto/update-diary.dto';
 import { HttpService } from '@nestjs/axios';
 import { lastValueFrom } from 'rxjs';
 import { DiaryLikeEntity } from './entities/diary-likes.entity';
+import { ConfigService } from '@nestjs/config';
+import { DiaryFileEntity } from './entities/diary-file.entity';
+import { unlink } from 'fs/promises';
+import { UPLOAD_PATH } from 'src/utils/path';
 
 @Injectable()
 export class DiaryService {
@@ -27,26 +32,57 @@ export class DiaryService {
     @InjectRepository(DiaryLikeEntity)
     private readonly diaryLikeRepository: Repository<DiaryLikeEntity>,
     private readonly httpService: HttpService,
+    private configService: ConfigService,
   ) {}
 
-  async createDiary(dto: CreateDiaryDto, userId: number, transactionManager: EntityManager) {
+  async createDiary(dto: CreateDiaryDto, filename: string, userId: number, transactionManager: EntityManager) {
     try {
+      if (!filename) {
+        throw new BadRequestException('다이어리 사진은 필수입니다.');
+      }
+      const fileUrl = `http://${this.configService.get('Eureka_HOST')}/files/diary/${filename}`;
+      const newFile = new DiaryFileEntity();
+      Object.assign(newFile, { fileUrl });
+      await transactionManager.save(newFile);
       const newDiary = new DiaryEntity();
-      Object.assign(newDiary, { userId, ...dto });
-      const diary = await transactionManager.save(newDiary);
-      return diary;
+      Object.assign(newDiary, { userId, fileRelation: [newFile], ...dto });
+      await transactionManager.save(newDiary);
+      return;
     } catch (e) {
       this.logger.error(e);
       throw e;
     }
   }
 
-  async updateDiary(diaryId: number, userId: number, dto: UpdateDiaryDto, transactionManager: EntityManager) {
+  async updateDiary(
+    diaryId: number,
+    filename: string | undefined,
+    userId: number,
+    dto: UpdateDiaryDto,
+    transactionManager: EntityManager,
+  ) {
     try {
       const isSameUser = await this.isSameUser(userId, diaryId);
       if (!isSameUser) {
-        throw new ForbiddenException('포스트 수정 권한이 없습니다');
+        throw new ForbiddenException('다이어리 수정 권한이 없습니다');
       }
+
+      // 다이어리 사진 변경
+      if (filename !== undefined) {
+        const fileUrl = `http://${this.configService.get('Eureka_HOST')}/files/diary/${filename}`;
+        const diaryFile = await transactionManager.findOne(DiaryEntity, {
+          where: { diaryId },
+          relations: { fileRelation: true },
+        });
+        const fileId = diaryFile.fileRelation[0].fileId;
+        const previousFileUrl = diaryFile.fileRelation[0].fileUrl;
+        await transactionManager.update(DiaryFileEntity, fileId, { fileUrl });
+
+        // 스토리지에 저장되어있는 이미지 삭제
+        const diaryFileName = previousFileUrl.split('/').pop();
+        await unlink(`${UPLOAD_PATH}/${diaryFileName}`);
+      }
+
       const result = await transactionManager.update(DiaryEntity, diaryId, { ...dto });
       if (result.affected === 0) {
         throw new BadRequestException('Diary update failed: Nothing updated');
@@ -62,9 +98,13 @@ export class DiaryService {
     try {
       const isSameUser = await this.isSameUser(userId, diaryId);
       if (!isSameUser) {
-        throw new ForbiddenException('포스트 삭제 권한이 없습니다');
+        throw new ForbiddenException('다이어리 삭제 권한이 없습니다');
       }
-      const diary = await this.diaryRepository.findOne({ where: { diaryId } });
+
+      const diary = await transactionManager.findOne(DiaryEntity, {
+        where: { diaryId },
+        relations: { fileRelation: true },
+      });
       if (!diary) {
         throw new NotFoundException('다이어리가 이미 삭제되었거나 존재하지 않습니다');
       }
@@ -78,6 +118,11 @@ export class DiaryService {
         throw new BadRequestException('Diary delete failed: Nothing deleted');
       }
 
+      // 스토리지에 저장되어있는 이미지도 함께 삭제
+      const diaryFileUrl = diary.fileRelation[0].fileUrl;
+      const diaryFileName = diaryFileUrl.split('/').pop();
+      await unlink(`${UPLOAD_PATH}/${diaryFileName}`);
+
       return;
     } catch (e) {
       this.logger.error(e);
@@ -85,14 +130,22 @@ export class DiaryService {
     }
   }
 
-  async readDiaryDetail(diaryId: number, token: string) {
+  async readDiaryDetail(diaryId: number, token: string, transactionManager: EntityManager) {
     try {
-      const diary = await this.diaryRepository.findOne({ where: { diaryId } });
-      if (!diary) {
+      // 조회수 1증가
+      await transactionManager.query(`UPDATE public."Diary" SET "views" = "views" + 1 WHERE "diaryId" = ${diaryId} `);
+
+      const viewUpdatedDiary = await transactionManager.findOne(DiaryEntity, {
+        where: { diaryId },
+        relations: { fileRelation: true },
+      });
+
+      if (!viewUpdatedDiary) {
         throw new NotFoundException('존재하지 않는 다이어리 입니다.');
       }
+
       // 다이어리 작성자 정보 불러오기
-      const { userId, ...restData } = diary;
+      const { userId, ...restData } = viewUpdatedDiary;
       const accessToken = token;
       const headers = { Authorization: `Bearer ${accessToken}` };
       let apiUrl;
@@ -107,6 +160,40 @@ export class DiaryService {
       return { ...restData, writer: diaryWriterInfo.data.data };
     } catch (e) {
       this.logger.error(e);
+      throw e;
+    }
+  }
+
+  async readUserDiary(userId: number, token: string) {
+    try {
+      // 사용자 정보 불러오기
+      const accessToken = token;
+      const headers = { Authorization: `Bearer ${accessToken}` };
+      let apiUrl;
+      if (process.env.NODE_ENV === 'dev') {
+        apiUrl = `http://${process.env.HOST}:3000/api/user/specificuser/${userId}`;
+      } else {
+        apiUrl = `http://${process.env.Eureka_HOST}/api/user/specificuser/${userId}`;
+      }
+
+      const writerInfo = await lastValueFrom(this.httpService.get(apiUrl, { headers })); // 사용자 정보
+
+      // 사용자 일기 전체 불러오기
+      const diaries = await this.diaryRepository.find({
+        where: { userId },
+        relations: { fileRelation: true },
+        order: {
+          setDate: 'DESC',
+        },
+      });
+      return { writer: writerInfo.data.data, diaries };
+    } catch (e) {
+      this.logger.error(e);
+      if (e.response && e.response.data) {
+        if (e.response.data.statusCode === HttpStatus.NOT_FOUND) {
+          throw new NotFoundException(`${e.response.data.message}`);
+        }
+      }
       throw e;
     }
   }
@@ -158,6 +245,16 @@ export class DiaryService {
       await transactionManager.query(`UPDATE public."Diary" SET "likes" = "likes" - 1 WHERE "diaryId" = ${diaryId}`);
 
       return;
+    } catch (e) {
+      this.logger.error(e);
+      throw e;
+    }
+  }
+
+  async getDiaryLike(diaryId: number, userId: number) {
+    try {
+      const allDiaryLikes = await this.diaryLikeRepository.find({ where: { diaryId } });
+      return { DiaryLikesInfo: allDiaryLikes, currentUserId: userId.toString() };
     } catch (e) {
       this.logger.error(e);
       throw e;

@@ -1,5 +1,6 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { WeatherType } from '../enums/weather.enum';
+import { DiaryFileEntity } from './diary-file.entity';
 
 @Entity('Diary')
 export class DiaryEntity {
@@ -38,4 +39,7 @@ export class DiaryEntity {
 
   @UpdateDateColumn({ nullable: false })
   updatedAt: Date;
+
+  @OneToMany(() => DiaryFileEntity, (file) => file.diary)
+  fileRelation: DiaryFileEntity[];
 }
