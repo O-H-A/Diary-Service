@@ -7,7 +7,9 @@ import { SwaggerConfig } from './configs/swagger.config';
 import { SwaggerModule } from '@nestjs/swagger';
 import { TransformInterceptor } from './interceptors/response.interceptors';
 import { ValidationPipe } from '@nestjs/common';
+import { EurekaClient } from './configs/eureka.config';
 
+const env = process.env.NODE_ENV;
 const port = process.env.PORT;
 
 async function bootstrap() {
@@ -40,8 +42,11 @@ async function bootstrap() {
   // run server
   try {
     await app.listen(port);
+    if (env === 'product') {
+      EurekaClient.logger.level('log');
+      EurekaClient.start();
+    }
     WinstonLogger.log(`Server is listening on port ${port} successfully`);
-    // console.log(`Server is listening on port ${port} successfully`);
   } catch (e) {
     WinstonLogger.error(e);
     WinstonLogger.error('Failed to start the app server');
