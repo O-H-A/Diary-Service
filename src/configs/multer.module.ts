@@ -18,7 +18,7 @@ import { UPLOAD_PATH } from 'src/utils/path';
         },
       }),
       fileFilter(req, file, callback) {
-        const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/bmp', 'image/gif', 'image/jpg', 'image/svg+xml'];
         if (!allowedTypes.includes(file.mimetype)) {
           throw new Error('Invalid file type');
         }
