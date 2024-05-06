@@ -40,7 +40,7 @@ export class DiaryService {
       if (!filename) {
         throw new BadRequestException('다이어리 사진은 필수입니다.');
       }
-      const fileUrl = `http://${this.configService.get('Eureka_HOST')}/files/diary/${filename}`;
+      const fileUrl = `https://ohauser2.serveftp.com/files/diary/${filename}`;
       const newFile = new DiaryFileEntity();
       Object.assign(newFile, { fileUrl });
       await transactionManager.save(newFile);

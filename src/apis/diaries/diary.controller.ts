@@ -111,7 +111,7 @@ export class DiaryController {
     return { message: '좋아요 정보 조회 성공', result };
   }
 
-  @ApiDescription('다이어리 등록 API')
+  @ApiDescription('다이어리 등록 API', '가장 최근에 등록된 순으로 정렬됩니다')
   @ApiBearerAuthAccessToken()
   @ApiResponseCreateDiary()
   @ApiResponseErrorBadRequest('다이어리 사진은 필수')
