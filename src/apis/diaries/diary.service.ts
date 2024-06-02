@@ -21,6 +21,7 @@ import { ConfigService } from '@nestjs/config';
 import { DiaryFileEntity } from './entities/diary-file.entity';
 import { unlink } from 'fs/promises';
 import { UPLOAD_PATH } from 'src/utils/path';
+import { ProducerService } from 'src/kafka/kafka.producer.service';
 
 @Injectable()
 export class DiaryService {
@@ -33,6 +34,7 @@ export class DiaryService {
     private readonly diaryLikeRepository: Repository<DiaryLikeEntity>,
     private readonly httpService: HttpService,
     private configService: ConfigService,
+    private readonly producerService: ProducerService,
   ) {}
 
   async createDiary(dto: CreateDiaryDto, filename: string, userId: number, transactionManager: EntityManager) {
@@ -170,11 +172,9 @@ export class DiaryService {
       const accessToken = token;
       const headers = { Authorization: `Bearer ${accessToken}` };
       let apiUrl;
-      if (process.env.NODE_ENV === 'dev') {
-        apiUrl = `http://${process.env.HOST}:3000/api/user/specificuser/${userId}`;
-      } else {
-        apiUrl = `http://${process.env.Eureka_HOST}/api/user/specificuser/${userId}`;
-      }
+      
+      apiUrl = `http://152.67.219.168/api/user/specificuser/${userId}`;
+      
 
       const writerInfo = await lastValueFrom(this.httpService.get(apiUrl, { headers })); // 사용자 정보
 
@@ -224,11 +224,33 @@ export class DiaryService {
         throw new NotFoundException('다이어리가 삭제되었거나 존재하지 않습니다');
       }
 
+      const diary_like_event = {
+        user_id: diary.userId,
+        diary_id: diary.diaryId,
+        like_user_id: userId,
+        thumbnail_url: diary.fileRelation && diary.fileRelation[0].fileUrl || null
+      }
+      await this.send_dairy_like_event(diary_like_event);
+
       return;
     } catch (e) {
       this.logger.error(e);
       throw e;
     }
+  }
+
+  async send_dairy_like_event(data: object) {
+    const kafkaEnv = process.env.KAFKA_ENV;
+    const topic = `diary-like-${kafkaEnv}`;
+
+    this.producerService.produce({
+      topic: topic,
+      messages: [
+        {
+          value: JSON.stringify(data),
+        },
+      ],
+    });
   }
 
   async deleteDiaryLike(diaryId: number, userId: number, transactionManager: EntityManager) {
