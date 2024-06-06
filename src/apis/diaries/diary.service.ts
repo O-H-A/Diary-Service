@@ -130,6 +130,40 @@ export class DiaryService {
     }
   }
 
+  async readDiary(userId: number, token: string) {
+    try {
+      // 사용자 정보 불러오기
+      const accessToken = token;
+      const headers = { Authorization: `Bearer ${accessToken}` };
+      let apiUrl;
+      if (process.env.NODE_ENV === 'dev') {
+        apiUrl = `http://${process.env.HOST}:3000/api/user/specificuser/${userId}`;
+      } else {
+        apiUrl = `http://${process.env.Eureka_HOST}/api/user/specificuser/${userId}`;
+      }
+
+      const writerInfo = await lastValueFrom(this.httpService.get(apiUrl, { headers })); // 사용자 정보
+
+      // 사용자 일기 전체 불러오기
+      const diaries = await this.diaryRepository.find({
+        where: { userId },
+        relations: { fileRelation: true },
+        order: {
+          setDate: 'DESC',
+        },
+      });
+      return { writer: writerInfo.data.data, diaries };
+    } catch (e) {
+      this.logger.error(e);
+      if (e.response && e.response.data) {
+        if (e.response.data.statusCode === HttpStatus.NOT_FOUND) {
+          throw new NotFoundException(`${e.response.data.message}`);
+        }
+      }
+      throw e;
+    }
+  }
+
   async readDiaryDetail(diaryId: number, token: string, transactionManager: EntityManager) {
     try {
       // 조회수 1증가
@@ -160,40 +194,6 @@ export class DiaryService {
       return { ...restData, writer: diaryWriterInfo.data.data };
     } catch (e) {
       this.logger.error(e);
-      throw e;
-    }
-  }
-
-  async readUserDiary(userId: number, token: string) {
-    try {
-      // 사용자 정보 불러오기
-      const accessToken = token;
-      const headers = { Authorization: `Bearer ${accessToken}` };
-      let apiUrl;
-      if (process.env.NODE_ENV === 'dev') {
-        apiUrl = `http://${process.env.HOST}:3000/api/user/specificuser/${userId}`;
-      } else {
-        apiUrl = `http://${process.env.Eureka_HOST}/api/user/specificuser/${userId}`;
-      }
-
-      const writerInfo = await lastValueFrom(this.httpService.get(apiUrl, { headers })); // 사용자 정보
-
-      // 사용자 일기 전체 불러오기
-      const diaries = await this.diaryRepository.find({
-        where: { userId },
-        relations: { fileRelation: true },
-        order: {
-          setDate: 'DESC',
-        },
-      });
-      return { writer: writerInfo.data.data, diaries };
-    } catch (e) {
-      this.logger.error(e);
-      if (e.response && e.response.data) {
-        if (e.response.data.statusCode === HttpStatus.NOT_FOUND) {
-          throw new NotFoundException(`${e.response.data.message}`);
-        }
-      }
       throw e;
     }
   }

@@ -43,7 +43,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 export class DiaryController {
   constructor(private readonly diaryService: DiaryService) {}
 
-  @ApiDescription('사용자가 작성한 다이어리 조회 API - 전체 기간')
+  @ApiDescription('사용자가 작성한 다이어리 조회 API - 전체 기간', '가장 최근에 등록된 순으로 정렬됩니다')
   @ApiResponseDiary()
   @ApiResponseErrorNotFound('존재하지 않는 사용자')
   @ApiBearerAuthAccessToken()
@@ -53,7 +53,22 @@ export class DiaryController {
     @GetUserId() userId: number,
     @GetUserToken() token: string,
   ): Promise<{ message: string; result: any }> {
-    const result = await this.diaryService.readUserDiary(userId, token);
+    const result = await this.diaryService.readDiary(userId, token);
+    return { message: '전체 기간 조회 성공', result };
+  }
+
+  @ApiDescription('다른 사용자가 작성한 다이어리 조회 API - 전체 기간', '가장 최근에 등록된 순으로 정렬됩니다')
+  @ApiParamDescription('userId', '숫자로 입력해주세요')
+  @ApiResponseDiary()
+  @ApiResponseErrorNotFound('존재하지 않는 사용자')
+  @ApiBearerAuthAccessToken()
+  @UseGuards(JwtAuthGuard)
+  @Get('all-diaries/:userId')
+  async readDiary(
+    @Param('userId') userId: number,
+    @GetUserToken() token: string,
+  ): Promise<{ message: string; result: any }> {
+    const result = await this.diaryService.readDiary(userId, token);
     return { message: '전체 기간 조회 성공', result };
   }
 
@@ -111,7 +126,7 @@ export class DiaryController {
     return { message: '좋아요 정보 조회 성공', result };
   }
 
-  @ApiDescription('다이어리 등록 API', '가장 최근에 등록된 순으로 정렬됩니다')
+  @ApiDescription('다이어리 등록 API')
   @ApiBearerAuthAccessToken()
   @ApiResponseCreateDiary()
   @ApiResponseErrorBadRequest('다이어리 사진은 필수')
