@@ -10,15 +10,15 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DiaryEntity } from './entities/diary.entity';
+import { DiaryEntity } from '../../entity/diary/diary.entity';
 import { EntityManager, Repository } from 'typeorm';
 import { CreateDiaryDto } from './dto/create-diary.dto';
 import { UpdateDiaryDto } from './dto/update-diary.dto';
 import { HttpService } from '@nestjs/axios';
 import { lastValueFrom } from 'rxjs';
-import { DiaryLikeEntity } from './entities/diary-likes.entity';
+import { DiaryLikeEntity } from '../../entity/diary/diary-likes.entity';
 import { ConfigService } from '@nestjs/config';
-import { DiaryFileEntity } from './entities/diary-file.entity';
+import { DiaryFileEntity } from 'src/entity/diary/diary-file.entity';
 import { unlink } from 'fs/promises';
 import { UPLOAD_PATH } from 'src/utils/path';
 

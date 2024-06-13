@@ -1,13 +1,13 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
+import { AppModule } from './module/app.module';
 import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
 import * as morgan from 'morgan';
-import { WinstonLogger } from './configs/winston.config';
-import { SwaggerConfig } from './configs/swagger.config';
+import { WinstonLogger } from './config/winston.config';
+import { SwaggerConfig } from './config/swagger.config';
 import { SwaggerModule } from '@nestjs/swagger';
 import { TransformInterceptor } from './interceptors/response.interceptors';
 import { ValidationPipe } from '@nestjs/common';
-import { EurekaClient } from './configs/eureka.config';
+import { EurekaClient } from './config/eureka.config';
 
 const env = process.env.NODE_ENV;
 const port = process.env.PORT;
