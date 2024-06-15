@@ -21,6 +21,7 @@ import { ConfigService } from '@nestjs/config';
 import { DiaryFileEntity } from 'src/entity/diary/diary-file.entity';
 import { unlink } from 'fs/promises';
 import { UPLOAD_PATH } from 'src/utils/path';
+import { ProducerService } from 'src/module/kafka/kafka.producer.service';
 
 @Injectable()
 export class DiaryService {
@@ -33,6 +34,7 @@ export class DiaryService {
     private readonly diaryLikeRepository: Repository<DiaryLikeEntity>,
     private readonly httpService: HttpService,
     private configService: ConfigService,
+    private readonly producerService: ProducerService,
   ) {}
 
   async createDiary(dto: CreateDiaryDto, filename: string, userId: number, transactionManager: EntityManager) {
@@ -197,7 +199,7 @@ export class DiaryService {
       throw e;
     }
   }
-
+  f;
   async createDiaryLike(diaryId: number, userId: number, transactionManager: EntityManager) {
     try {
       if (!diaryId || !userId) {
@@ -223,6 +225,14 @@ export class DiaryService {
       if (!diary) {
         throw new NotFoundException('다이어리가 삭제되었거나 존재하지 않습니다');
       }
+
+      const diary_like_event = {
+        user_id: diary.userId,
+        diary_id: diary.diaryId,
+        like_user_id: userId,
+        thumbnail_url: (diary.fileRelation && diary.fileRelation[0].fileUrl) || null,
+      };
+      await this.send_dairy_like_event(diary_like_event);
 
       return;
     } catch (e) {
@@ -270,8 +280,7 @@ export class DiaryService {
       const diaries = await manager.getRepository(DiaryEntity).find({
         where: { diaryId: In(diaryIds) },
       });
-      console.log(diaries);
-      console.log(diaryIds);
+
       if (diaries.length !== diaryIds.length) {
         for (const diaryId of diaryIds) {
           const diaryExists = diaries.some((diary) => diary.diaryId === diaryId);
@@ -285,6 +294,20 @@ export class DiaryService {
       this.logger.error(e);
       throw e;
     }
+  }
+
+  async send_dairy_like_event(data: object) {
+    const kafkaEnv = process.env.KAFKA_ENV;
+    const topic = `diary-like-${kafkaEnv}`;
+
+    this.producerService.produce({
+      topic: topic,
+      messages: [
+        {
+          value: JSON.stringify(data),
+        },
+      ],
+    });
   }
 
   private async isSameUser(currentUserId: number, diaryId: number) {
