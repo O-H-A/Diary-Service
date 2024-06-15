@@ -274,3 +274,46 @@ export const ApiResponseGetDiaryLike = () =>
       },
     },
   });
+
+export const ApiResponseSpecificDiaries = () =>
+  ApiResponse({
+    status: 200,
+    content: {
+      'application/json': {
+        example: {
+          statusCode: 200,
+          message: '특정 여러 다이어리 조회 성공',
+          data: [
+            {
+              diaryId: 44,
+              userId: '30',
+              title: '다낭에 눈이 왔어요 ><',
+              weather: 'WTHR_SNOW',
+              content: '예~~',
+              setDate: '20240315',
+              location: 'skyland',
+              isPublic: true,
+              likes: '0',
+              views: '0',
+              createdAt: '2024-05-06T05:33:53.228Z',
+              updatedAt: '2024-05-06T05:33:53.228Z',
+            },
+            {
+              diaryId: 45,
+              userId: '30',
+              title: '다낭이 흐려',
+              weather: 'WTHR_PARTLY_CLOUDY',
+              content: '예~~',
+              setDate: '20240210',
+              location: 'skyland',
+              isPublic: true,
+              likes: '0',
+              views: '2',
+              createdAt: '2024-05-06T05:35:33.768Z',
+              updatedAt: '2024-05-06T05:35:33.768Z',
+            },
+          ],
+        },
+      },
+    },
+  });

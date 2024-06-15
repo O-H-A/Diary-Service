@@ -3,6 +3,8 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Post,
   Put,
@@ -25,6 +27,7 @@ import {
   ApiResponseErrorForbidden,
   ApiResponseErrorNotFound,
   ApiResponseGetDiaryLike,
+  ApiResponseSpecificDiaries,
   ApiResponseUpdateDiary,
   ApiTagDiary,
   GetUserId,
@@ -37,11 +40,28 @@ import { CreateDiaryDto } from './dto/create-diary.dto';
 import { TransactionInterceptor } from 'src/interceptors/transaction.interceptor';
 import { UpdateDiaryDto } from './dto/update-diary.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { DiariesInfoDto } from './dto/diaries-info.dto';
 
 @ApiTagDiary()
 @Controller('api/diary')
 export class DiaryController {
   constructor(private readonly diaryService: DiaryService) {}
+
+  @ApiDescription('특정 다이어리 여러개 정보 조회 API - Backend용')
+  @ApiBearerAuthAccessToken()
+  @ApiResponseSpecificDiaries()
+  @ApiResponseErrorNotFound('존재하지 않는 다이어리')
+  @UseInterceptors(TransactionInterceptor)
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @Post('specificdiaries')
+  async getSpecificDiaries(
+    @Body() dto: DiariesInfoDto,
+    @TransactionManager() transactionManager,
+  ): Promise<{ message: string; result: any }> {
+    const result = await this.diaryService.getSpecificDiaries(dto, transactionManager);
+    return { message: '조회 성공', result };
+  }
 
   @ApiDescription('사용자가 작성한 다이어리 조회 API - 전체 기간', '가장 최근에 등록된 순으로 정렬됩니다')
   @ApiResponseDiary()

@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DiaryEntity } from '../../entity/diary/diary.entity';
-import { EntityManager, Repository } from 'typeorm';
+import { EntityManager, Repository, In } from 'typeorm';
 import { CreateDiaryDto } from './dto/create-diary.dto';
 import { UpdateDiaryDto } from './dto/update-diary.dto';
 import { HttpService } from '@nestjs/axios';
@@ -255,6 +255,32 @@ export class DiaryService {
     try {
       const allDiaryLikes = await this.diaryLikeRepository.find({ where: { diaryId } });
       return { DiaryLikesInfo: allDiaryLikes, currentUserId: userId.toString() };
+    } catch (e) {
+      this.logger.error(e);
+      throw e;
+    }
+  }
+
+  async getSpecificDiaries(dto, manager: EntityManager) {
+    try {
+      const { diaryIds } = dto;
+      if (!diaryIds || diaryIds.length === 0) {
+        throw new BadRequestException('요청한 다이어리 아이디가 없습니다.');
+      }
+      const diaries = await manager.getRepository(DiaryEntity).find({
+        where: { diaryId: In(diaryIds) },
+      });
+      console.log(diaries);
+      console.log(diaryIds);
+      if (diaries.length !== diaryIds.length) {
+        for (const diaryId of diaryIds) {
+          const diaryExists = diaries.some((diary) => diary.diaryId === diaryId);
+          if (!diaryExists) {
+            throw new NotFoundException(`아이디가 ${diaryId}인 다이어리는 존재하지 않습니다.`);
+          }
+        }
+      }
+      return diaries;
     } catch (e) {
       this.logger.error(e);
       throw e;
