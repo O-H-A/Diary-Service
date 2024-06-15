@@ -8,6 +8,7 @@ import { HttpModule } from '@nestjs/axios';
 import { DiaryLikeEntity } from '../../entity/diary/diary-likes.entity';
 import { DiaryFileEntity } from '../../entity/diary/diary-file.entity';
 import { DiskStorageModule } from '../../config/multer.module';
+import { ProducerService } from '../kafka/kafka.producer.service';
 
 @Module({
   imports: [
@@ -16,6 +17,6 @@ import { DiskStorageModule } from '../../config/multer.module';
     DiskStorageModule,
   ],
   controllers: [DiaryController],
-  providers: [DiaryService, JwtStrategy, Logger],
+  providers: [DiaryService, JwtStrategy, Logger, ProducerService],
 })
 export class DiaryModule {}
