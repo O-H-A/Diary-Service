@@ -9,6 +9,7 @@ import { DiaryLikeEntity } from '../../entity/diary/diary-likes.entity';
 import { DiaryFileEntity } from '../../entity/diary/diary-file.entity';
 import { DiskStorageModule } from '../../config/multer.module';
 import { ProducerService } from '../kafka/kafka.producer.service';
+import { ConsumerService } from '../kafka/kafka.consumer.service';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { ProducerService } from '../kafka/kafka.producer.service';
     DiskStorageModule,
   ],
   controllers: [DiaryController],
-  providers: [DiaryService, JwtStrategy, Logger, ProducerService],
+  providers: [DiaryService, JwtStrategy, Logger, ProducerService, ConsumerService],
+  exports: [ConsumerService, ProducerService],
 })
 export class DiaryModule {}

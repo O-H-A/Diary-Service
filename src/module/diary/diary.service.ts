@@ -8,6 +8,7 @@ import {
   Logger,
   LoggerService,
   NotFoundException,
+  OnModuleInit,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DiaryEntity } from '../../entity/diary/diary.entity';
@@ -22,9 +23,10 @@ import { DiaryFileEntity } from 'src/entity/diary/diary-file.entity';
 import { unlink } from 'fs/promises';
 import { UPLOAD_PATH } from 'src/utils/path';
 import { ProducerService } from 'src/module/kafka/kafka.producer.service';
+import { ConsumerService } from '../kafka/kafka.consumer.service';
 
 @Injectable()
-export class DiaryService {
+export class DiaryService implements OnModuleInit {
   constructor(
     @Inject(Logger)
     private readonly logger: LoggerService,
@@ -35,6 +37,7 @@ export class DiaryService {
     private readonly httpService: HttpService,
     private configService: ConfigService,
     private readonly producerService: ProducerService,
+    private readonly consumerService: ConsumerService,
   ) {}
 
   async createDiary(dto: CreateDiaryDto, filename: string, userId: number, transactionManager: EntityManager) {
@@ -296,6 +299,13 @@ export class DiaryService {
     }
   }
 
+  async deleteDiariesByUserId(userId: number) {
+    await this.diaryRepository.delete({ userId });
+    // 다이어리 좋아요 삭제
+    await this.diaryLikeRepository.delete({ userId });
+    return;
+  }
+
   async send_dairy_like_event(data: object) {
     const kafkaEnv = process.env.KAFKA_ENV;
     const topic = `diary-like-${kafkaEnv}`;
@@ -308,6 +318,24 @@ export class DiaryService {
         },
       ],
     });
+  }
+
+  async onModuleInit() {
+    const kafkaEnv = process.env.KAFKA_ENV;
+    await this.consumerService.consume(
+      {
+        topics: [`user-withdraw-${kafkaEnv}`],
+      },
+      {
+        eachMessage: async ({ topic, partition, message }) => {
+          const event = JSON.parse(message.value.toString());
+          console.log(event);
+          const { userId } = event;
+          // Diary 테이블에서 userId 관련 정보 모두 삭제
+          await this.deleteDiariesByUserId(userId);
+        },
+      },
+    );
   }
 
   private async isSameUser(currentUserId: number, diaryId: number) {
