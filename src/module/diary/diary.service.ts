@@ -45,13 +45,13 @@ export class DiaryService implements OnModuleInit {
       if (!filename) {
         throw new BadRequestException('다이어리 사진은 필수입니다.');
       }
+      const newDiary = new DiaryEntity();
+      Object.assign(newDiary, { userId, ...dto });
+      const diary = await transactionManager.save(newDiary);
       const fileUrl = `https://ohauser2.serveftp.com/files/diary/${filename}`;
       const newFile = new DiaryFileEntity();
-      Object.assign(newFile, { fileUrl });
+      Object.assign(newFile, { diaryId: diary.diaryId, fileUrl });
       await transactionManager.save(newFile);
-      const newDiary = new DiaryEntity();
-      Object.assign(newDiary, { userId, fileRelation: [newFile], ...dto });
-      await transactionManager.save(newDiary);
       return;
     } catch (e) {
       this.logger.error(e);
@@ -79,6 +79,7 @@ export class DiaryService implements OnModuleInit {
           where: { diaryId },
           relations: { fileRelation: true },
         });
+        console.log(diaryFile);
         const fileId = diaryFile.fileRelation[0].fileId;
         const previousFileUrl = diaryFile.fileRelation[0].fileUrl;
         await transactionManager.update(DiaryFileEntity, fileId, { fileUrl });
@@ -202,7 +203,7 @@ export class DiaryService implements OnModuleInit {
       throw e;
     }
   }
-  f;
+
   async createDiaryLike(diaryId: number, userId: number, transactionManager: EntityManager) {
     try {
       if (!diaryId || !userId) {
