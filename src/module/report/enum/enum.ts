@@ -1,0 +1,14 @@
+export enum ReportReasonEnum {
+  DISLIKE = 'REP_RSN_001',
+  SPAM = 'REP_RSN_002',
+  NUDITY = 'REP_RSN_003',
+  HATE_SPEECH = 'REP_RSN_004',
+  MIS_INFO = 'REP_RSN_005',
+  COPYRIGHT = 'REP_RSN_006',
+}
+
+export enum ReportActionEnum {
+  POST_DELETE = 'REP_ACT_001',
+  POST_NOT_DELETE = 'REP_ACT_002',
+  SEND_NOTIFICATON = 'REP_ACT_003',
+}

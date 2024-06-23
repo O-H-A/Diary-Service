@@ -1,32 +1,32 @@
-import { ReportType } from 'src/module/diary/report/enum/enum';
 import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { DiaryEntity } from '../diary/diary.entity';
+import { ReportReasonEntity } from './reportReason.entity';
 
 @Entity('Diary-Report')
 export class DiaryReportEntity {
   @PrimaryGeneratedColumn()
   reportId: number;
 
-  @Column({ name: 'diaryId', nullable: false })
+  @Column({ type: 'numeric', name: 'diaryId', nullable: false })
   diaryId: number;
 
-  @Column({ type: 'enum', enum: ReportType, nullable: false })
-  reportType: ReportType;
+  @Column({ type: 'numeric', nullable: false })
+  reasonCode: string;
 
   @Column({ type: 'numeric', nullable: false })
-  reporterId: number;
+  reportingUserId: number;
 
-  @Column({ type: 'varchar', nullable: false }) // enum으로 할지 보류
-  reportStatus: string;
+  @Column({ type: 'boolean', default: false, nullable: false })
+  isDone: boolean;
 
   @Column({ type: 'varchar', default: null, nullable: true })
-  resolvedNote: string;
+  actionCodes: string[];
 
-  @CreateDateColumn({ type: 'timestamptz', nullable: false })
-  reportTime: Date;
+  @CreateDateColumn({ nullable: false })
+  regDtm: Date;
 
-  @Column({ type: 'timestamptz', default: null, nullable: true })
-  resolvedTime: Date;
+  @Column({ type: 'timestamp', default: null, nullable: true })
+  actionDtm: Date;
 
   @ManyToOne(() => DiaryEntity, (diary) => diary.reportRelation, {
     onDelete: 'CASCADE',
@@ -34,4 +34,11 @@ export class DiaryReportEntity {
   })
   @JoinColumn({ name: 'diaryId', referencedColumnName: 'diaryId' })
   diaryIdRelation: DiaryEntity;
+
+  @ManyToOne(() => ReportReasonEntity, (reason) => reason.reportRelation, {
+    onDelete: 'SET NULL',
+    onUpdate: 'CASCADE',
+  })
+  @JoinColumn({ name: 'reasonCode', referencedColumnName: 'code' })
+  reasonCodeRelation: ReportReasonEntity;
 }

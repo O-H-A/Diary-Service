@@ -45,5 +45,5 @@ export class DiaryEntity {
   fileRelation: DiaryFileEntity[];
 
   @OneToMany(() => DiaryReportEntity, (report) => report.diaryIdRelation)
-  reportRelation: DiaryReportEntity;
+  reportRelation: DiaryReportEntity[];
 }
