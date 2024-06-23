@@ -79,7 +79,6 @@ export class DiaryService implements OnModuleInit {
           where: { diaryId },
           relations: { fileRelation: true },
         });
-        console.log(diaryFile);
         const fileId = diaryFile.fileRelation[0].fileId;
         const previousFileUrl = diaryFile.fileRelation[0].fileUrl;
         await transactionManager.update(DiaryFileEntity, fileId, { fileUrl });
@@ -330,7 +329,6 @@ export class DiaryService implements OnModuleInit {
       {
         eachMessage: async ({ topic, partition, message }) => {
           const event = JSON.parse(message.value.toString());
-          console.log(event);
           const { userId } = event;
           // Diary 테이블에서 userId 관련 정보 모두 삭제
           await this.deleteDiariesByUserId(userId);
