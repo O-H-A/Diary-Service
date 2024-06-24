@@ -19,7 +19,7 @@ export class DiaryReportEntity {
   @Column({ type: 'boolean', default: false, nullable: false })
   isDone: boolean;
 
-  @Column({ type: 'varchar', default: null, nullable: true })
+  @Column({ type: 'varchar', array: true, default: null, nullable: true })
   actionCodes: string[];
 
   @CreateDateColumn({ nullable: false })

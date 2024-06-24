@@ -30,16 +30,20 @@ export class DiaryReportService {
     }
   }
 
-  async updateDiaryReportAction(reportId: number, actionInfo: ActionInfoDto, transactionManager: EntityManager) {
+  async updateDiaryReportAction(actionInfo: ActionInfoDto, transactionManager: EntityManager) {
     try {
+      const { reportId, actionCodes } = actionInfo;
       const report = await this.diaryReportRepository.findOne({ where: { reportId } });
       if (!report) {
         throw new NotFoundException('reportId에 해당하는 신고 정보가 없습니다');
       }
-      const { actionCodes } = actionInfo;
-      const actionDtm = new Date();
 
-      await transactionManager.update(DiaryReportEntity, reportId, { actionCodes, actionDtm, isDone: true });
+      const actionDtm = new Date();
+      await transactionManager.update(DiaryReportEntity, reportId, {
+        actionCodes,
+        actionDtm,
+        isDone: true,
+      });
       return;
     } catch (e) {
       this.logger.error(e);
@@ -71,28 +75,33 @@ export class DiaryReportService {
           }
           const reportingUserInfoResponse = await lastValueFrom(this.httpService.get(apiUrl, { headers }));
           const reportingUserInfo = reportingUserInfoResponse.data.data;
-          diaryReport['reportingUserIdRelation'] = reportingUserInfo;
+          diaryReport['reportingUserName'] = reportingUserInfo.name;
+          diaryReport['reportingUserProfile'] = reportingUserInfo.profileUrl;
+          diaryReport['reportedUserId'] = diaryReport.diaryIdRelation.userId;
+          delete diaryReport.diaryIdRelation;
           return diaryReport;
         }),
       );
+
       const finalDiaryReportList = await Promise.all(
         updateDiaryReportList.map(async (updateDiaryReport) => {
-          const diaryWriterId = updateDiaryReport.diaryIdRelation.userId;
+          const reportedUserId = updateDiaryReport['reportedUserId'];
           let apiUrl;
           if (process.env.NODE_ENV === 'dev') {
-            apiUrl = `http://${process.env.HOST}:3000/api/user/specificuser/${diaryWriterId}`;
+            apiUrl = `http://${process.env.HOST}:3000/api/user/specificuser/${reportedUserId}`;
           } else {
-            apiUrl = `http://${process.env.Eureka_HOST}/api/user/specificuser/${diaryWriterId}`;
+            apiUrl = `http://${process.env.Eureka_HOST}/api/user/specificuser/${reportedUserId}`;
           }
-          const diaryWriterInfoResponse = await lastValueFrom(this.httpService.get(apiUrl, { headers }));
-          const diaryWriterInfo = diaryWriterInfoResponse.data.data;
-          updateDiaryReport.diaryIdRelation['userIdRelation'] = diaryWriterInfo;
+          const reportedUserInfoResponse = await lastValueFrom(this.httpService.get(apiUrl, { headers }));
+          const reportedUserInfo = reportedUserInfoResponse.data.data;
+          const { name: reportedUserName, profileUrl: reportedUserProfileUrl } = reportedUserInfo;
+          updateDiaryReportList['reportedUserName'] = reportedUserName;
+          updateDiaryReportList['reportedUserProfileUrl'] = reportedUserProfileUrl;
           return updateDiaryReport;
         }),
       );
-      // return finalDiaryReportList;
-      // 응답값 posting이랑 맞추기
-      return finalDiaryReportList; // 추후 변경
+
+      return finalDiaryReportList;
     } catch (e) {
       this.logger.error(e);
       throw e;

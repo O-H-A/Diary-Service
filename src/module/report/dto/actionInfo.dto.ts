@@ -1,11 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { ReportActionEnum } from '../enum/enum';
-import { IsEnum } from 'class-validator';
+import { IsEnum, IsNumber } from 'class-validator';
 
 export class ActionInfoDto {
+  @ApiProperty({ type: 'number', description: '산고ID', example: 1 })
+  @IsNumber()
+  reportId: number;
+
   @ApiProperty({
     isArray: true,
-    enum: ReportActionEnum,
     description: '신고 조치 코드 리스트',
     example: ['REP_ACT_001', 'REP_ACT_003'],
   })

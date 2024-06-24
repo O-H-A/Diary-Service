@@ -1,9 +1,8 @@
-import { Body, Controller, Get, Param, Post, Put, Query, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, Post, Put, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ReportInfoDto } from './dto/reportInfo.dto';
 import {
   ApiBearerAuthAccessToken,
   ApiDescription,
-  ApiParamDescription,
   GetUserId,
   GetUserToken,
   TransactionManager,
@@ -15,16 +14,16 @@ import { ApiQuery, ApiTags } from '@nestjs/swagger';
 import { ActionInfoDto } from './dto/actionInfo.dto';
 import { ReportReasonEnum } from './enum/enum';
 
-@ApiTags('REPORT')
-@Controller('api/diary/report')
+@Controller('api/diary')
 export class DiaryReportController {
   constructor(private readonly reportService: DiaryReportService) {}
 
+  @ApiTags('DIARY')
   @ApiDescription('다이어리 신고 등록 API')
   @ApiBearerAuthAccessToken()
   @UseInterceptors(TransactionInterceptor)
   @UseGuards(JwtAuthGuard)
-  @Post('/')
+  @Post('/report')
   async createDiaryReport(
     @GetUserId() reportingUserId: number,
     @Body() reportInfo: ReportInfoDto,
@@ -34,21 +33,21 @@ export class DiaryReportController {
     return { message: '신고 등록 성공' };
   }
 
+  @ApiTags('DIARY (관리자')
   @ApiDescription('다이어리 신고조치 업데이트 API')
-  @ApiParamDescription('reportId', '숫자로 입력해주세요')
   @ApiBearerAuthAccessToken()
   @UseInterceptors(TransactionInterceptor)
   @UseGuards(JwtAuthGuard)
-  @Put('/:reportId')
+  @Put('/admin/report/action')
   async updateDiaryReportAction(
-    @Param('reportId') reportId: number,
     @Body() actionInfo: ActionInfoDto,
     @TransactionManager() transactionManager,
   ): Promise<{ message: string }> {
-    await this.reportService.updateDiaryReportAction(reportId, actionInfo, transactionManager);
+    await this.reportService.updateDiaryReportAction(actionInfo, transactionManager);
     return { message: '신고 조치 업데이트 성공' };
   }
 
+  @ApiTags('DIARY (관리자')
   @ApiDescription('다이어리 신고 정보 조회 API')
   @ApiQuery({
     name: 'reasonCode',
@@ -59,7 +58,7 @@ export class DiaryReportController {
   @ApiBearerAuthAccessToken()
   @UseInterceptors(TransactionInterceptor)
   @UseGuards(JwtAuthGuard)
-  @Get('/diaryReportList')
+  @Get('/admin/report/reportList')
   async getDiaryReportList(
     @GetUserToken() token: string,
     @Query('reasonCode') reasonCode: ReportReasonEnum,
