@@ -7,6 +7,7 @@ import { ActionInfoDto } from './dto/actionInfo.dto';
 import { HttpService } from '@nestjs/axios';
 import { lastValueFrom } from 'rxjs';
 import { ReportReasonEnum } from './enum/enum';
+import { DiaryEntity } from 'src/entity/diary/diary.entity';
 
 @Injectable()
 export class DiaryReportService {
@@ -16,10 +17,16 @@ export class DiaryReportService {
     private readonly httpService: HttpService,
     @InjectRepository(DiaryReportEntity)
     private readonly diaryReportRepository: Repository<DiaryReportEntity>,
+    @InjectRepository(DiaryEntity)
+    private readonly diaryRepository: Repository<DiaryEntity>,
   ) {}
 
   async createDiaryReport(reportingUserId: number, reportInfo: ReportInfoDto, transactionManager: EntityManager) {
     try {
+      const diary = await this.diaryRepository.findOne({ where: { diaryId: reportInfo.diaryId } });
+      if (!diary) {
+        throw new NotFoundException('신고할 다이어리가 존재하지 않습니다.');
+      }
       const newReport = new DiaryReportEntity();
       Object.assign(newReport, { reportingUserId, ...reportInfo });
       await transactionManager.save(newReport);
@@ -36,6 +43,10 @@ export class DiaryReportService {
       const report = await this.diaryReportRepository.findOne({ where: { reportId } });
       if (!report) {
         throw new NotFoundException('reportId에 해당하는 신고 정보가 없습니다');
+      }
+      const diary = await this.diaryRepository.findOne({ where: { diaryId: report.diaryId } });
+      if (!diary) {
+        throw new NotFoundException('다이어리가 존재하지 않습니다');
       }
 
       const actionDtm = new Date();
@@ -77,7 +88,8 @@ export class DiaryReportService {
           const reportingUserInfo = reportingUserInfoResponse.data.data;
           diaryReport['reportingUserName'] = reportingUserInfo.name;
           diaryReport['reportingUserProfile'] = reportingUserInfo.profileUrl;
-          diaryReport['reportedUserId'] = diaryReport.diaryIdRelation.userId;
+          diaryReport['reportedUserId'] = Number(diaryReport.diaryIdRelation.userId);
+          diaryReport.reportingUserId = Number(diaryReport.reportingUserId);
           delete diaryReport.diaryIdRelation;
           return diaryReport;
         }),

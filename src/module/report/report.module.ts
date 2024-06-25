@@ -6,9 +6,10 @@ import { DiaryReportService } from './report.service';
 import { JwtStrategy } from 'src/auth/strategies/jwt.access.strategy';
 import { ReportReasonEntity } from 'src/entity/report/reportReason.entity';
 import { HttpModule } from '@nestjs/axios';
+import { DiaryEntity } from 'src/entity/diary/diary.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([DiaryReportEntity, ReportReasonEntity]), HttpModule.register({})],
+  imports: [TypeOrmModule.forFeature([DiaryReportEntity, ReportReasonEntity, DiaryEntity]), HttpModule.register({})],
   controllers: [DiaryReportController],
   providers: [DiaryReportService, JwtStrategy, Logger],
 })
