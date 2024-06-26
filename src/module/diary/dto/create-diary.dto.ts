@@ -28,6 +28,9 @@ export class CreateDiaryDto {
   @IsEnum(Object.values(WeatherType), { message: '날씨에 대한 유효하지 않은 값이 입력되었습니다.' })
   readonly weather: WeatherType;
 
+  @ApiProperty({ type: 'string', format: 'binary', description: '업로드할 파일' })
+  readonly file: any;
+
   @ApiProperty({ example: true, description: '선택 입력 값입니다. 미입력 시 기본 값으로 true(공개)가 저장됩니다' })
   @IsOptional()
   readonly isPublic?: boolean;

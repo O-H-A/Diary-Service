@@ -45,13 +45,13 @@ export class DiaryService implements OnModuleInit {
       if (!filename) {
         throw new BadRequestException('다이어리 사진은 필수입니다.');
       }
+      const newDiary = new DiaryEntity();
+      Object.assign(newDiary, { userId, ...dto });
+      const diary = await transactionManager.save(newDiary);
       const fileUrl = `https://ohauser2.serveftp.com/files/diary/${filename}`;
       const newFile = new DiaryFileEntity();
-      Object.assign(newFile, { fileUrl });
+      Object.assign(newFile, { diaryId: diary.diaryId, fileUrl });
       await transactionManager.save(newFile);
-      const newDiary = new DiaryEntity();
-      Object.assign(newDiary, { userId, fileRelation: [newFile], ...dto });
-      await transactionManager.save(newDiary);
       return;
     } catch (e) {
       this.logger.error(e);
@@ -202,7 +202,7 @@ export class DiaryService implements OnModuleInit {
       throw e;
     }
   }
-  f;
+
   async createDiaryLike(diaryId: number, userId: number, transactionManager: EntityManager) {
     try {
       if (!diaryId || !userId) {
@@ -329,7 +329,6 @@ export class DiaryService implements OnModuleInit {
       {
         eachMessage: async ({ topic, partition, message }) => {
           const event = JSON.parse(message.value.toString());
-          console.log(event);
           const { userId } = event;
           // Diary 테이블에서 userId 관련 정보 모두 삭제
           await this.deleteDiariesByUserId(userId);
