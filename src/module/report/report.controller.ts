@@ -7,7 +7,10 @@ import { DiaryReportService } from './report.service';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ActionInfoDto } from './dto/actionInfo.dto';
 import { ReportReasonEnum } from './enum/enum';
-import { DIARY_ADMIN_REPORTLIST, DIARY_ADMIN_REPORT_ACTION, DIARY_REPORT } from 'src/swagger/report.swagger';
+import { DIARY_ADMIN_REPORTLIST, DIARY_ADMIN_REPORT_ACTION, DIARY_REPORT } from 'src/common/swagger/report.swagger';
+import { UserRolesGuard } from 'src/auth/guards/userRole.guard';
+import { UserRole } from 'src/common/decorator/userRole.decorator';
+import { UserGradeEnum } from 'src/common/enum/enum';
 
 @Controller('api/diary')
 export class DiaryReportController {
@@ -20,7 +23,8 @@ export class DiaryReportController {
   @ApiResponse(DIARY_REPORT.POST.API_RESPONSE_ERR_404)
   @ApiBearerAuth('access-token')
   @UseInterceptors(TransactionInterceptor)
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, UserRolesGuard)
+  @UserRole(UserGradeEnum.USER)
   @Post('/report')
   async createDiaryReport(
     @GetUserId() reportingUserId: number,
@@ -39,7 +43,8 @@ export class DiaryReportController {
   @ApiResponse(DIARY_ADMIN_REPORT_ACTION.PATCH.API_RESPONSE_ERR_404)
   @ApiBearerAuth('access-token')
   @UseInterceptors(TransactionInterceptor)
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, UserRolesGuard)
+  @UserRole(UserGradeEnum.ADMIN)
   @Patch('/admin/report/action')
   async updateDiaryReportAction(
     @Body() actionInfo: ActionInfoDto,
@@ -57,7 +62,8 @@ export class DiaryReportController {
   @ApiResponse(DIARY_ADMIN_REPORTLIST.GET.API_RESPONSE_OK)
   @ApiBearerAuth('access-token')
   @UseInterceptors(TransactionInterceptor)
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, UserRolesGuard)
+  @UserRole(UserGradeEnum.ADMIN)
   @Get('/admin/report/reportList')
   async getDiaryReportList(
     @GetUserToken() token: string,
