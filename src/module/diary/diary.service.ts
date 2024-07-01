@@ -283,15 +283,6 @@ export class DiaryService implements OnModuleInit {
       const diaries = await manager.getRepository(DiaryEntity).find({
         where: { diaryId: In(diaryIds) },
       });
-
-      if (diaries.length !== diaryIds.length) {
-        for (const diaryId of diaryIds) {
-          const diaryExists = diaries.some((diary) => diary.diaryId === diaryId);
-          if (!diaryExists) {
-            throw new NotFoundException(`아이디가 ${diaryId}인 다이어리는 존재하지 않습니다.`);
-          }
-        }
-      }
       return diaries;
     } catch (e) {
       this.logger.error(e);
