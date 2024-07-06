@@ -24,6 +24,7 @@ import { unlink } from 'fs/promises';
 import { UPLOAD_PATH } from 'src/utils/path';
 import { ProducerService } from 'src/module/kafka/kafka.producer.service';
 import { ConsumerService } from '../kafka/kafka.consumer.service';
+import { ProducerRecord } from 'kafkajs';
 
 @Injectable()
 export class DiaryService implements OnModuleInit {
@@ -229,13 +230,15 @@ export class DiaryService implements OnModuleInit {
         throw new NotFoundException('다이어리가 삭제되었거나 존재하지 않습니다');
       }
 
-      const diary_like_event = {
-        user_id: diary.userId,
-        diary_id: diary.diaryId,
-        like_user_id: userId,
-        thumbnail_url: (diary.fileRelation && diary.fileRelation[0].fileUrl) || null,
+      // 좋아요 이벤트 정보 카프카로 보내기
+      const diaryLikeEvent = {
+        userId: diary.userId,
+        diaryId: diary.diaryId,
+        likeUserId: userId,
+        diaryImageUrl: (diary.fileRelation && diary.fileRelation[0].fileUrl) || null,
       };
-      await this.send_dairy_like_event(diary_like_event);
+      console.log(diaryLikeEvent);
+      await this.sendDiaryLikeEvent(diaryLikeEvent);
 
       return;
     } catch (e) {
@@ -297,18 +300,13 @@ export class DiaryService implements OnModuleInit {
     return;
   }
 
-  async send_dairy_like_event(data: object) {
+  async sendDiaryLikeEvent(data: object) {
     const kafkaEnv = process.env.KAFKA_ENV;
-    const topic = `diary-like-${kafkaEnv}`;
-
-    this.producerService.produce({
-      topic: topic,
-      messages: [
-        {
-          value: JSON.stringify(data),
-        },
-      ],
-    });
+    const record: ProducerRecord = {
+      topic: `diary-like-${kafkaEnv}`,
+      messages: [{ value: JSON.stringify(data) }],
+    };
+    await this.producerService.produce(record);
   }
 
   async onModuleInit() {

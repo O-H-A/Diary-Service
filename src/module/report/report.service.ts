@@ -8,6 +8,9 @@ import { HttpService } from '@nestjs/axios';
 import { lastValueFrom } from 'rxjs';
 import { ReportReasonEnum } from './enum/enum';
 import { DiaryEntity } from 'src/entity/diary/diary.entity';
+import { ProducerService } from '../kafka/kafka.producer.service';
+import { ConsumerService } from '../kafka/kafka.consumer.service';
+import { ProducerRecord } from 'kafkajs';
 
 @Injectable()
 export class DiaryReportService {
@@ -19,6 +22,8 @@ export class DiaryReportService {
     private readonly diaryReportRepository: Repository<DiaryReportEntity>,
     @InjectRepository(DiaryEntity)
     private readonly diaryRepository: Repository<DiaryEntity>,
+    private readonly producerService: ProducerService,
+    private readonly consumerService: ConsumerService,
   ) {}
 
   async createDiaryReport(reportingUserId: number, reportInfo: ReportInfoDto, transactionManager: EntityManager) {
@@ -29,7 +34,17 @@ export class DiaryReportService {
       }
       const newReport = new DiaryReportEntity();
       Object.assign(newReport, { reportingUserId, ...reportInfo });
-      await transactionManager.save(newReport);
+      const report = await transactionManager.save(newReport);
+
+      const reportEvent = {
+        reportingUserId,
+        reportedUserId: report.diaryIdRelation.userId,
+        diaryId: report.diaryId,
+        reasonCode: report.reasonCode,
+        reasonName: report.reasonCodeRelation.reasonName,
+        regDTM: report.regDtm,
+      };
+      await this.sendReportEvent(reportEvent);
       return;
     } catch (e) {
       this.logger.error(e);
@@ -118,5 +133,14 @@ export class DiaryReportService {
       this.logger.error(e);
       throw e;
     }
+  }
+
+  private async sendReportEvent(data: object) {
+    const kafkaEnv = process.env.KAFKA_ENV;
+    const record: ProducerRecord = {
+      topic: `diary-report-${kafkaEnv}`,
+      messages: [{ value: JSON.stringify(data) }],
+    };
+    await this.producerService.produce(record);
   }
 }
