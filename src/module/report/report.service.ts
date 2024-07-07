@@ -125,8 +125,8 @@ export class DiaryReportService {
           const reportedUserInfoResponse = await lastValueFrom(this.httpService.get(apiUrl, { headers }));
           const reportedUserInfo = reportedUserInfoResponse.data.data;
           const { name: reportedUserName, profileUrl: reportedUserProfileUrl } = reportedUserInfo;
-          updateDiaryReportList['reportedUserName'] = reportedUserName;
-          updateDiaryReportList['reportedUserProfileUrl'] = reportedUserProfileUrl;
+          updateDiaryReport['reportedUserName'] = reportedUserName;
+          updateDiaryReport['reportedUserProfileUrl'] = reportedUserProfileUrl;
           return updateDiaryReport;
         }),
       );
