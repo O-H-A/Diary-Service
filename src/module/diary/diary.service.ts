@@ -219,25 +219,24 @@ export class DiaryService implements OnModuleInit {
       // 좋아요 클릭 정보 저장
       const newDiaryLike = new DiaryLikeEntity();
       Object.assign(newDiaryLike, { diaryId, userId });
-      await transactionManager.save(newDiaryLike);
+      const diaryLike = await transactionManager.save(newDiaryLike);
 
       // 좋아요 클릭 수 업데이트 (1증가)
       await transactionManager.query(`UPDATE public."Diary" SET "likes" = "likes" + 1 WHERE "diaryId" = ${diaryId}`);
 
       // 다이어리 정보가 없을 경우 에러 처리
-      const diary = await this.diaryRepository.findOne({ where: { diaryId } });
+      const diary = await this.diaryRepository.findOne({ where: { diaryId }, relations: { fileRelation: true } });
       if (!diary) {
         throw new NotFoundException('다이어리가 삭제되었거나 존재하지 않습니다');
       }
-
       // 좋아요 이벤트 정보 카프카로 보내기
       const diaryLikeEvent = {
-        userId: diary.userId,
-        diaryId: diary.diaryId,
-        likeUserId: userId,
-        diaryImageUrl: (diary.fileRelation && diary.fileRelation[0].fileUrl) || null,
+        user_id: Number(diary.userId),
+        diary_id: diary.diaryId,
+        like_user_id: userId,
+        diary_image_url: (diary.fileRelation && diary.fileRelation[0].fileUrl) || null,
+        like_created_at: diaryLike.createdAt,
       };
-      console.log(diaryLikeEvent);
       await this.sendDiaryLikeEvent(diaryLikeEvent);
 
       return;
