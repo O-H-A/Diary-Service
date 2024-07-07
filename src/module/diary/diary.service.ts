@@ -24,6 +24,7 @@ import { unlink } from 'fs/promises';
 import { UPLOAD_PATH } from 'src/utils/path';
 import { ProducerService } from 'src/module/kafka/kafka.producer.service';
 import { ConsumerService } from '../kafka/kafka.consumer.service';
+import { ProducerRecord } from 'kafkajs';
 
 @Injectable()
 export class DiaryService implements OnModuleInit {
@@ -218,24 +219,25 @@ export class DiaryService implements OnModuleInit {
       // 좋아요 클릭 정보 저장
       const newDiaryLike = new DiaryLikeEntity();
       Object.assign(newDiaryLike, { diaryId, userId });
-      await transactionManager.save(newDiaryLike);
+      const diaryLike = await transactionManager.save(newDiaryLike);
 
       // 좋아요 클릭 수 업데이트 (1증가)
       await transactionManager.query(`UPDATE public."Diary" SET "likes" = "likes" + 1 WHERE "diaryId" = ${diaryId}`);
 
       // 다이어리 정보가 없을 경우 에러 처리
-      const diary = await this.diaryRepository.findOne({ where: { diaryId } });
+      const diary = await this.diaryRepository.findOne({ where: { diaryId }, relations: { fileRelation: true } });
       if (!diary) {
         throw new NotFoundException('다이어리가 삭제되었거나 존재하지 않습니다');
       }
-
-      const diary_like_event = {
-        user_id: diary.userId,
+      // 좋아요 이벤트 정보 카프카로 보내기
+      const diaryLikeEvent = {
+        user_id: Number(diary.userId),
         diary_id: diary.diaryId,
         like_user_id: userId,
-        thumbnail_url: (diary.fileRelation && diary.fileRelation[0].fileUrl) || null,
+        diary_image_url: (diary.fileRelation && diary.fileRelation[0].fileUrl) || null,
+        like_created_at: diaryLike.createdAt,
       };
-      await this.send_dairy_like_event(diary_like_event);
+      await this.sendDiaryLikeEvent(diaryLikeEvent);
 
       return;
     } catch (e) {
@@ -297,18 +299,13 @@ export class DiaryService implements OnModuleInit {
     return;
   }
 
-  async send_dairy_like_event(data: object) {
+  async sendDiaryLikeEvent(data: object) {
     const kafkaEnv = process.env.KAFKA_ENV;
-    const topic = `diary-like-${kafkaEnv}`;
-
-    this.producerService.produce({
-      topic: topic,
-      messages: [
-        {
-          value: JSON.stringify(data),
-        },
-      ],
-    });
+    const record: ProducerRecord = {
+      topic: `diary-like-${kafkaEnv}`,
+      messages: [{ value: JSON.stringify(data) }],
+    };
+    await this.producerService.produce(record);
   }
 
   async onModuleInit() {

@@ -50,7 +50,6 @@ export class DiaryReportController {
     @Body() actionInfo: ActionInfoDto,
     @TransactionManager() transactionManager,
   ): Promise<{ message: string }> {
-    console.log(actionInfo);
     await this.reportService.updateDiaryReportAction(actionInfo, transactionManager);
     return { message: '신고 조치 업데이트 성공' };
   }

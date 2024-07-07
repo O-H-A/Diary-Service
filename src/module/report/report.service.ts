@@ -8,6 +8,10 @@ import { HttpService } from '@nestjs/axios';
 import { lastValueFrom } from 'rxjs';
 import { ReportReasonEnum } from './enum/enum';
 import { DiaryEntity } from 'src/entity/diary/diary.entity';
+import { ProducerService } from '../kafka/kafka.producer.service';
+import { ConsumerService } from '../kafka/kafka.consumer.service';
+import { ProducerRecord } from 'kafkajs';
+import { ReportReasonEntity } from 'src/entity/report/reportReason.entity';
 
 @Injectable()
 export class DiaryReportService {
@@ -19,6 +23,10 @@ export class DiaryReportService {
     private readonly diaryReportRepository: Repository<DiaryReportEntity>,
     @InjectRepository(DiaryEntity)
     private readonly diaryRepository: Repository<DiaryEntity>,
+    @InjectRepository(ReportReasonEntity)
+    private readonly reportReasonRepository: Repository<ReportReasonEntity>,
+    private readonly producerService: ProducerService,
+    private readonly consumerService: ConsumerService,
   ) {}
 
   async createDiaryReport(reportingUserId: number, reportInfo: ReportInfoDto, transactionManager: EntityManager) {
@@ -29,7 +37,17 @@ export class DiaryReportService {
       }
       const newReport = new DiaryReportEntity();
       Object.assign(newReport, { reportingUserId, ...reportInfo });
-      await transactionManager.save(newReport);
+      const report = await transactionManager.save(newReport);
+      const reportReason = await this.reportReasonRepository.findOne({ where: { code: report.reasonCode } });
+      const reportEvent = {
+        reporting_user_id: reportingUserId,
+        reported_user_id: diary.userId,
+        diary_id: report.diaryId,
+        reason_code: report.reasonCode,
+        reason_name: reportReason.reasonName,
+        reg_dtm: report.regDtm,
+      };
+      await this.sendReportEvent(reportEvent);
       return;
     } catch (e) {
       this.logger.error(e);
@@ -107,8 +125,8 @@ export class DiaryReportService {
           const reportedUserInfoResponse = await lastValueFrom(this.httpService.get(apiUrl, { headers }));
           const reportedUserInfo = reportedUserInfoResponse.data.data;
           const { name: reportedUserName, profileUrl: reportedUserProfileUrl } = reportedUserInfo;
-          updateDiaryReportList['reportedUserName'] = reportedUserName;
-          updateDiaryReportList['reportedUserProfileUrl'] = reportedUserProfileUrl;
+          updateDiaryReport['reportedUserName'] = reportedUserName;
+          updateDiaryReport['reportedUserProfileUrl'] = reportedUserProfileUrl;
           return updateDiaryReport;
         }),
       );
@@ -118,5 +136,14 @@ export class DiaryReportService {
       this.logger.error(e);
       throw e;
     }
+  }
+
+  private async sendReportEvent(data: object) {
+    const kafkaEnv = process.env.KAFKA_ENV;
+    const record: ProducerRecord = {
+      topic: `diary-report-${kafkaEnv}`,
+      messages: [{ value: JSON.stringify(data) }],
+    };
+    await this.producerService.produce(record);
   }
 }
