@@ -14,7 +14,7 @@ export class CreateDiaryDto {
   @MaxLength(150, { message: '최대 150자입니다' })
   readonly title: string;
 
-  @ApiProperty({ example: '내용입니다. 최대 300자', description: '선택 입력 값입니다' })
+  @ApiProperty({ example: '내용입니다. 최대 300자', description: '선택 입력 값입니다', required: false })
   @IsOptional()
   @IsString()
   @MaxLength(300, { message: '최대 300자입니다' })
@@ -31,11 +31,15 @@ export class CreateDiaryDto {
   @ApiProperty({ type: 'string', format: 'binary', description: '업로드할 파일' })
   readonly file: any;
 
-  @ApiProperty({ example: true, description: '선택 입력 값입니다. 미입력 시 기본 값으로 true(공개)가 저장됩니다' })
+  @ApiProperty({
+    example: true,
+    description: '선택 입력 값입니다. 미입력 시 기본 값으로 true(공개)가 저장됩니다',
+    required: false,
+  })
   @IsOptional()
   readonly isPublic?: boolean;
 
-  @ApiProperty({ example: '뉴욕', description: '선택 입력 값입니다. string 형식 아무 문장 입력 가능' })
+  @ApiProperty({ example: '뉴욕', description: '선택 입력 값입니다. string 형식 아무 문장 입력 가능', required: false })
   @IsOptional()
   @IsString()
   readonly location?: string;

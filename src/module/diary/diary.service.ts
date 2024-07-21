@@ -158,6 +158,7 @@ export class DiaryService implements OnModuleInit {
           setDate: 'DESC',
         },
       });
+      console.log(diaries)
       return { writer: writerInfo.data.data, diaries };
     } catch (e) {
       this.logger.error(e);
