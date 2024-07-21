@@ -41,11 +41,30 @@ import { TransactionInterceptor } from 'src/interceptors/transaction.interceptor
 import { UpdateDiaryDto } from './dto/update-diary.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { DiariesInfoDto } from './dto/diaries-info.dto';
+import { ApiConsumes } from '@nestjs/swagger';
 
 @ApiTagDiary()
 @Controller('api/diary')
 export class DiaryController {
   constructor(private readonly diaryService: DiaryService) {}
+
+  @ApiDescription('다이어리 등록 API')
+  @ApiConsumes('multipart/form-data')
+  @ApiBearerAuthAccessToken()
+  @ApiResponseCreateDiary()
+  @ApiResponseErrorBadRequest('다이어리 사진은 필수')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(TransactionInterceptor, FileInterceptor('file'))
+  @Post('/')
+  async createDiary(
+    @Body() dto: CreateDiaryDto,
+    @GetUserId() userId: number,
+    @TransactionManager() transactionManager,
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<{ message: string }> {
+    await this.diaryService.createDiary(dto, file.filename, userId, transactionManager);
+    return { message: '등록 성공' };
+  }
 
   @ApiDescription('특정 다이어리 여러개 정보 조회 API - Backend용')
   @ApiBearerAuthAccessToken()
@@ -146,24 +165,8 @@ export class DiaryController {
     return { message: '좋아요 정보 조회 성공', result };
   }
 
-  @ApiDescription('다이어리 등록 API')
-  @ApiBearerAuthAccessToken()
-  @ApiResponseCreateDiary()
-  @ApiResponseErrorBadRequest('다이어리 사진은 필수')
-  @UseGuards(JwtAuthGuard)
-  @UseInterceptors(TransactionInterceptor, FileInterceptor('file'))
-  @Post('/')
-  async createDiary(
-    @Body() dto: CreateDiaryDto,
-    @GetUserId() userId: number,
-    @TransactionManager() transactionManager,
-    @UploadedFile() file: Express.Multer.File,
-  ): Promise<{ message: string; result: any }> {
-    const result = await this.diaryService.createDiary(dto, file.filename, userId, transactionManager);
-    return { message: '등록 성공', result };
-  }
-
   @ApiDescription('다이어리 수정 API')
+  @ApiConsumes('multipart/form-data')
   @ApiParamDescription('diaryId', '숫자로 입력해주세요')
   @ApiResponseUpdateDiary()
   @ApiResponseErrorForbidden('다이어리 수정 권한이 없음')
