@@ -1,10 +1,21 @@
-import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { DiaryEntity } from './diary.entity';
 
 @Entity('Diary-File')
 export class DiaryFileEntity {
   @PrimaryGeneratedColumn()
   fileId: number;
+
+  @Column({ name: 'diaryId', nullable: false })
+  diaryId: number;
 
   @Column({ type: 'varchar', nullable: false })
   fileUrl: string;
@@ -20,5 +31,6 @@ export class DiaryFileEntity {
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   })
-  diary: DiaryEntity;
+  @JoinColumn({ name: 'diaryId', referencedColumnName: 'diaryId' })
+  diaryIdRelation: DiaryEntity;
 }
