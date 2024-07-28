@@ -62,6 +62,7 @@ export class DiaryController {
     @TransactionManager() transactionManager,
     @UploadedFiles() file: Express.Multer.File[]
   ): Promise<{ message: string }> {
+    console.log(file)
     await this.diaryService.createDiary(dto, file, userId, transactionManager);
     return { message: '등록 성공' };
   }
