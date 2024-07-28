@@ -41,15 +41,16 @@ export class DiaryService implements OnModuleInit {
     private readonly consumerService: ConsumerService,
   ) {}
 
-  async createDiary(dto: CreateDiaryDto, filename: string, userId: number, transactionManager: EntityManager) {
+  async createDiary(dto, file, userId: number, transactionManager: EntityManager) {
     try {
-      if (!filename) {
+      const fileName = file[0].filename
+      if (!fileName) {
         throw new BadRequestException('다이어리 사진은 필수입니다.');
       }
       const newDiary = new DiaryEntity();
       Object.assign(newDiary, { userId, ...dto });
       const diary = await transactionManager.save(newDiary);
-      const fileUrl = `https://ohauser2.serveftp.com/files/diary/${filename}`;
+      const fileUrl = `https://ohauser2.serveftp.com/files/diary/${fileName}`;
       const newFile = new DiaryFileEntity();
       Object.assign(newFile, { diaryId: diary.diaryId, fileUrl });
       await transactionManager.save(newFile);
@@ -62,20 +63,21 @@ export class DiaryService implements OnModuleInit {
 
   async updateDiary(
     diaryId: number,
-    filename: string | undefined,
+    file: any,
     userId: number,
     dto: UpdateDiaryDto,
     transactionManager: EntityManager,
   ) {
     try {
+      const fileName = file[0].filename
       const isSameUser = await this.isSameUser(userId, diaryId);
       if (!isSameUser) {
         throw new ForbiddenException('다이어리 수정 권한이 없습니다');
       }
 
       // 다이어리 사진 변경
-      if (filename !== undefined) {
-        const fileUrl = `http://${this.configService.get('Eureka_HOST')}/files/diary/${filename}`;
+      if (fileName !== undefined) {
+        const fileUrl = `http://${this.configService.get('Eureka_HOST')}/files/diary/${fileName}`;
         const diaryFile = await transactionManager.findOne(DiaryEntity, {
           where: { diaryId },
           relations: { fileRelation: true },
@@ -158,7 +160,6 @@ export class DiaryService implements OnModuleInit {
           setDate: 'DESC',
         },
       });
-      console.log(diaries)
       return { writer: writerInfo.data.data, diaries };
     } catch (e) {
       this.logger.error(e);
@@ -294,6 +295,7 @@ export class DiaryService implements OnModuleInit {
   }
 
   async deleteDiariesByUserId(userId: number) {
+    // 다이어리 삭제
     await this.diaryRepository.delete({ userId });
     // 다이어리 좋아요 삭제
     await this.diaryLikeRepository.delete({ userId });
