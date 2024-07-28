@@ -2,6 +2,7 @@ import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, Up
 import { WeatherType } from '../../module/diary/enums/weather.enum';
 import { DiaryFileEntity } from './diary-file.entity';
 import { DiaryReportEntity } from '../report/diary-report.entity';
+import { DiaryLikeEntity } from './diary-likes.entity';
 
 @Entity('Diary')
 export class DiaryEntity {
@@ -46,4 +47,7 @@ export class DiaryEntity {
 
   @OneToMany(() => DiaryReportEntity, (report) => report.diaryIdRelation)
   reportRelation: DiaryReportEntity[];
+
+  // @OneToMany(() => DiaryLikeEntity, (like) => like.diaryIdRelation)
+  // likeRelation: DiaryLikeEntity[]
 }

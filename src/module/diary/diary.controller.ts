@@ -8,7 +8,7 @@ import {
   Param,
   Post,
   Put,
-  UploadedFile,
+  UploadedFiles,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -39,7 +39,7 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { CreateDiaryDto } from './dto/create-diary.dto';
 import { TransactionInterceptor } from 'src/interceptors/transaction.interceptor';
 import { UpdateDiaryDto } from './dto/update-diary.dto';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { DiariesInfoDto } from './dto/diaries-info.dto';
 import { ApiConsumes } from '@nestjs/swagger';
 
@@ -54,15 +54,15 @@ export class DiaryController {
   @ApiResponseCreateDiary()
   @ApiResponseErrorBadRequest('다이어리 사진은 필수')
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(TransactionInterceptor, FileInterceptor('file'))
+  @UseInterceptors(TransactionInterceptor, FilesInterceptor('file',1))
   @Post('/')
   async createDiary(
     @Body() dto: CreateDiaryDto,
     @GetUserId() userId: number,
     @TransactionManager() transactionManager,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFiles() file: Express.Multer.File[]
   ): Promise<{ message: string }> {
-    await this.diaryService.createDiary(dto, file.filename, userId, transactionManager);
+    await this.diaryService.createDiary(dto, file, userId, transactionManager);
     return { message: '등록 성공' };
   }
 
@@ -173,17 +173,17 @@ export class DiaryController {
   @ApiResponseErrorBadRequest('수정된 다이어리 없음')
   @ApiBearerAuthAccessToken()
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(TransactionInterceptor, FileInterceptor('file'))
+  @UseInterceptors(TransactionInterceptor, FilesInterceptor('file',1))
   @Put(':diaryId')
   async updateDiary(
     @Param('diaryId') diaryId: number,
     @Body() dto: UpdateDiaryDto,
     @GetUserId() userId: number,
     @TransactionManager() transactionManager,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFiles() file: Express.Multer.File[]
   ): Promise<{ message: string }> {
     if (file !== undefined) {
-      await this.diaryService.updateDiary(diaryId, file.filename, userId, dto, transactionManager);
+      await this.diaryService.updateDiary(diaryId, file, userId, dto, transactionManager);
     } else {
       await this.diaryService.updateDiary(diaryId, undefined, userId, dto, transactionManager);
     }
