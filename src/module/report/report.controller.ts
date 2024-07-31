@@ -1,16 +1,16 @@
 import { Body, Controller, Get, Patch, Post, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ReportInfoDto } from './dto/reportInfo.dto';
-import { GetUserId, GetUserToken, TransactionManager } from 'src/utils/decorators';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { TransactionInterceptor } from 'src/interceptors/transaction.interceptor';
+import { GetUserId, GetUserToken, TransactionManager } from '../../utils/decorators';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { TransactionInterceptor } from '../../interceptors/transaction.interceptor';
 import { DiaryReportService } from './report.service';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ActionInfoDto } from './dto/actionInfo.dto';
 import { ReportReasonEnum } from './enum/enum';
-import { DIARY_ADMIN_REPORTLIST, DIARY_ADMIN_REPORT_ACTION, DIARY_REPORT } from 'src/common/swagger/report.swagger';
-import { UserRolesGuard } from 'src/auth/guards/userRole.guard';
-import { UserRole } from 'src/common/decorator/userRole.decorator';
-import { UserGradeEnum } from 'src/common/enum/enum';
+import { DIARY_ADMIN_REPORTLIST, DIARY_ADMIN_REPORT_ACTION, DIARY_REPORT } from '../../common/swagger/report.swagger';
+import { UserRolesGuard } from '../../auth/guards/userRole.guard';
+import { UserRole } from '../../common/decorator/userRole.decorator';
+import { UserGradeEnum } from '../../common/enum/enum';
 
 @Controller('api/diary')
 export class DiaryReportController {

@@ -2,7 +2,6 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 import { WeatherType } from '../enums/weather.enum';
 
-
 export class CreateDiaryDto {
   @ApiProperty({ example: '20240315', description: '예시의 형식을 지켜주세요(년월일)' })
   @IsNotEmpty({ message: '날짜 등록은 필수입니다' })

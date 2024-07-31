@@ -33,11 +33,11 @@ import {
   GetUserId,
   GetUserToken,
   TransactionManager,
-} from 'src/utils/decorators';
+} from '../../utils/decorators';
 import { DiaryService } from './diary.service';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { CreateDiaryDto } from './dto/create-diary.dto';
-import { TransactionInterceptor } from 'src/interceptors/transaction.interceptor';
+import { TransactionInterceptor } from '../../interceptors/transaction.interceptor';
 import { UpdateDiaryDto } from './dto/update-diary.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { DiariesInfoDto } from './dto/diaries-info.dto';
@@ -54,15 +54,15 @@ export class DiaryController {
   @ApiResponseCreateDiary()
   @ApiResponseErrorBadRequest('다이어리 사진은 필수')
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(TransactionInterceptor, FilesInterceptor('file',1))
+  @UseInterceptors(TransactionInterceptor, FilesInterceptor('file', 1))
   @Post('/')
   async createDiary(
     @Body() dto: CreateDiaryDto,
     @GetUserId() userId: number,
     @TransactionManager() transactionManager,
-    @UploadedFiles() file: Express.Multer.File[]
+    @UploadedFiles() file: Express.Multer.File[],
   ): Promise<{ message: string }> {
-    console.log(file)
+    console.log(file);
     await this.diaryService.createDiary(dto, file, userId, transactionManager);
     return { message: '등록 성공' };
   }
@@ -174,14 +174,14 @@ export class DiaryController {
   @ApiResponseErrorBadRequest('수정된 다이어리 없음')
   @ApiBearerAuthAccessToken()
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(TransactionInterceptor, FilesInterceptor('file',1))
+  @UseInterceptors(TransactionInterceptor, FilesInterceptor('file', 1))
   @Put(':diaryId')
   async updateDiary(
     @Param('diaryId') diaryId: number,
     @Body() dto: UpdateDiaryDto,
     @GetUserId() userId: number,
     @TransactionManager() transactionManager,
-    @UploadedFiles() file: Express.Multer.File[]
+    @UploadedFiles() file: Express.Multer.File[],
   ): Promise<{ message: string }> {
     if (file !== undefined) {
       await this.diaryService.updateDiary(diaryId, file, userId, dto, transactionManager);

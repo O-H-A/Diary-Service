@@ -1,4 +1,4 @@
-import { ActionInfoDto } from 'src/module/report/dto/actionInfo.dto';
+import { ActionInfoDto } from '../../module/report/dto/actionInfo.dto';
 
 export const DIARY_REPORT: any = {
   POST: {

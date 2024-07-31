@@ -2,43 +2,43 @@ import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGenerat
 import { DiaryEntity } from '../diary/diary.entity';
 import { ReportReasonEntity } from './reportReason.entity';
 
-@Entity('Diary-Report')
-export class DiaryReportEntity {
-  @PrimaryGeneratedColumn()
+@Entity('report')
+export class ReportEntity {
+  @PrimaryGeneratedColumn({ name: 'report_id' })
   reportId: number;
 
-  @Column({ type: 'numeric', name: 'diaryId', nullable: false })
+  @Column({ name: 'diary_id', nullable: false })
   diaryId: number;
 
-  @Column({ type: 'numeric', nullable: false })
+  @Column({ name: 'reason_code', nullable: true })
   reasonCode: string;
 
-  @Column({ type: 'numeric', nullable: false })
+  @Column({ name: 'reporting_user_id', nullable: false })
   reportingUserId: number;
 
-  @Column({ type: 'boolean', default: false, nullable: false })
+  @Column({ name: 'is_done', default: false, nullable: false })
   isDone: boolean;
 
-  @Column({ type: 'varchar', array: true, default: null, nullable: true })
+  @Column({ name: 'action_codes', type: 'simple-json', default: null, nullable: true })
   actionCodes: string[];
 
-  @CreateDateColumn({ nullable: false })
+  @CreateDateColumn({ name: 'reg_dtm', nullable: false })
   regDtm: Date;
 
-  @Column({ type: 'timestamp', default: null, nullable: true })
+  @Column({ name: 'acton_dtm', default: null, nullable: true })
   actionDtm: Date;
 
   @ManyToOne(() => DiaryEntity, (diary) => diary.reportRelation, {
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   })
-  @JoinColumn({ name: 'diaryId', referencedColumnName: 'diaryId' })
+  @JoinColumn({ name: 'diary_id', referencedColumnName: 'diaryId' })
   diaryIdRelation: DiaryEntity;
 
   @ManyToOne(() => ReportReasonEntity, (reason) => reason.reportRelation, {
     onDelete: 'SET NULL',
     onUpdate: 'CASCADE',
   })
-  @JoinColumn({ name: 'reasonCode', referencedColumnName: 'code' })
+  @JoinColumn({ name: 'reason_code', referencedColumnName: 'reasonCode' })
   reasonCodeRelation: ReportReasonEntity;
 }

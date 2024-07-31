@@ -1,5 +1,5 @@
 import { Eureka } from 'eureka-js-client';
-import { Eureka_Heartbeat_Interval, Eureka_Registery_Interval } from 'src/utils/constant';
+import { Eureka_Heartbeat_Interval, Eureka_Registery_Interval } from '../utils/constant';
 
 const env = process.env.NODE_ENV;
 

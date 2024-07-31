@@ -10,7 +10,6 @@ import { ValidationPipe } from '@nestjs/common';
 import { EurekaClient } from './config/eureka.config';
 import { json } from 'body-parser';
 
-
 const env = process.env.NODE_ENV;
 const port = process.env.PORT;
 
@@ -34,7 +33,6 @@ async function bootstrap() {
   // use global interceptors
   app.useGlobalInterceptors(new TransformInterceptor());
 
-  
   app.use(json({ limit: '10mb' }));
 
   // run swagger
