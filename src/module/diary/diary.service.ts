@@ -140,7 +140,7 @@ export class DiaryService implements OnModuleInit {
       const accessToken = token;
       const headers = { Authorization: `Bearer ${accessToken}` };
       let apiUrl;
-      if (process.env.NODE_ENV === 'dev') {
+      if (process.env.NODE_ENV === 'local') {
         apiUrl = `http://${process.env.HOST}:3000/api/user/specificuser/${userId}`;
       } else {
         apiUrl = `http://${process.env.Eureka_HOST}/api/user/specificuser/${userId}`;
@@ -187,7 +187,7 @@ export class DiaryService implements OnModuleInit {
       const accessToken = token;
       const headers = { Authorization: `Bearer ${accessToken}` };
       let apiUrl;
-      if (process.env.NODE_ENV === 'dev') {
+      if (process.env.NODE_ENV === 'local') {
         apiUrl = `http://${process.env.HOST}:3000/api/user/specificuser/${userId}`;
       } else {
         apiUrl = `http://${process.env.Eureka_HOST}/api/user/specificuser/${userId}`;

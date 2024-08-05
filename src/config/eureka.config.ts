@@ -3,8 +3,8 @@ import { Eureka_Heartbeat_Interval, Eureka_Registery_Interval } from '../utils/c
 
 const env = process.env.NODE_ENV;
 
-const appName = `DIARY-SERVICE${env === 'product' ? '-DEV' : ''}`;
-const executeUrl = `${process.env.HOST}:${process.env.PORT1}`;
+const appName = `DIARY-SERVICE${env === 'dev' ? '-DEV' : ''}`;
+const executeUrl = `${process.env.HOST}:${process.env.PORT}`;
 
 export const EurekaClient = new Eureka({
   instance: {

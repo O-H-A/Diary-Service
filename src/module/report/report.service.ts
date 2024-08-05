@@ -97,7 +97,7 @@ export class DiaryReportService {
         diaryReportList.map(async (diaryReport) => {
           const reportingUserId = diaryReport.reportingUserId;
           let apiUrl;
-          if (process.env.NODE_ENV === 'dev') {
+          if (process.env.NODE_ENV === 'local') {
             apiUrl = `http://${process.env.HOST}:3000/api/user/specificuser/${reportingUserId}`;
           } else {
             apiUrl = `http://${process.env.Eureka_HOST}/api/user/specificuser/${reportingUserId}`;
@@ -117,7 +117,7 @@ export class DiaryReportService {
         updateDiaryReportList.map(async (updateDiaryReport) => {
           const reportedUserId = updateDiaryReport['reportedUserId'];
           let apiUrl;
-          if (process.env.NODE_ENV === 'dev') {
+          if (process.env.NODE_ENV === 'local') {
             apiUrl = `http://${process.env.HOST}:3000/api/user/specificuser/${reportedUserId}`;
           } else {
             apiUrl = `http://${process.env.Eureka_HOST}/api/user/specificuser/${reportedUserId}`;

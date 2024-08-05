@@ -8,15 +8,17 @@ import { SwaggerModule } from '@nestjs/swagger';
 import { TransformInterceptor } from './interceptors/response.interceptors';
 import { ValidationPipe } from '@nestjs/common';
 import { EurekaClient } from './config/eureka.config';
+import { ConfigService } from '@nestjs/config';
 import { json } from 'body-parser';
-
-const env = process.env.NODE_ENV;
-const port = process.env.PORT;
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: WinstonLogger,
   });
+
+  const configService: ConfigService = app.get(ConfigService);
+  const env: string = configService.get<string>('NODE_ENV');
+  const SERVER_PORT: number = configService.get<number>('PORT');
 
   // cors settings
   const corsOptions: CorsOptions = {
@@ -33,6 +35,7 @@ async function bootstrap() {
   // use global interceptors
   app.useGlobalInterceptors(new TransformInterceptor());
 
+  // payload size limit
   app.use(json({ limit: '10mb' }));
 
   // run swagger
@@ -42,17 +45,16 @@ async function bootstrap() {
     swaggerOptions: { defaultModelsExpandDepth: -1 },
   });
 
-  // run server
   try {
-    await app.listen(port);
-    if (env === 'product') {
+    await app.listen(SERVER_PORT);
+    if (env === 'dev' || env === 'prod') {
       EurekaClient.logger.level('log');
       EurekaClient.start();
     }
-    WinstonLogger.log(`Server is listening on port ${port} successfully`);
+    WinstonLogger.log(`✅ Server is listening on port ${SERVER_PORT}`);
   } catch (e) {
     WinstonLogger.error(e);
-    WinstonLogger.error('Failed to start the app server');
+    WinstonLogger.error('⛔️ Failed to start the app server');
   }
 }
 
