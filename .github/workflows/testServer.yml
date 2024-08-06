@@ -1,0 +1,24 @@
+name: Deploy to testServer
+
+on:
+  push:
+    branches: ["dev"]
+
+jobs:
+  build:
+    runs-on: self-hosted
+    steps:
+      - name: remote ssh
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.TEST_SSH_HOST }}
+          username: ${{ secrets.TEST_SSH_USER }}
+          key: ${{ secrets.TEST_PRIVATE_KEY }}
+          timeout: 60s
+          script: |
+            echo "############# MOVE DIRECTORY #############"
+            cd ../../diary/api
+            echo "############# GIT PULL #############"
+            sudo git pull origin main
+            echo "############# RUN SCRIPT #############"
+            sh script.sh
