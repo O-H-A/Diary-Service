@@ -20,7 +20,7 @@ import { DiaryLikeEntity } from '../../entity/diary/diaryLikes.entity';
 import { ConfigService } from '@nestjs/config';
 import { DiaryFileEntity } from '../../entity/diary/diaryFile.entity';
 import { unlink } from 'fs/promises';
-import { UPLOAD_PATH } from '../../utils/path';
+import { UPLOAD_PATH } from '../../common/utils/path';
 import { ProducerService } from '../../module/kafka/kafka.producer.service';
 import { ConsumerService } from '../kafka/kafka.consumer.service';
 import { ProducerRecord } from 'kafkajs';

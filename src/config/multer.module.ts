@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { MulterModule } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import { FILES, FILE_SIZE } from '../utils/constant';
-import { UPLOAD_PATH } from '../utils/path';
+import { FILES, FILE_SIZE } from '../common/utils/constant';
+import { UPLOAD_PATH } from '../common/utils/path';
 
 @Module({
   imports: [

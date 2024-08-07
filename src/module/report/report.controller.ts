@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Patch, Post, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ReportInfoDto } from './dto/reportInfo.dto';
-import { GetUserId, GetUserToken, TransactionManager } from '../../utils/decorators';
+import { GetUserId, GetUserToken, TransactionManager } from '../../common/decorator';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { TransactionInterceptor } from '../../interceptors/transaction.interceptor';
 import { DiaryReportService } from './report.service';

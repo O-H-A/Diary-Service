@@ -5,12 +5,12 @@ services:
       dockerfile: Dockerfile
     container_name: 'diary'
     networks:
-      - diary-net_default
+      - net-default
     ports:
       - '3020:3020'
     volumes:
       - ./src:/app/src
-      # - ./logs:/myfolder/logs
+      - ./logs:/app/logs
     env_file:
       - './.env'
     environment:
@@ -33,5 +33,5 @@ services:
     #       cpus: '1'
 
 networks:
-  diary-net_default:
+  net-default:
     driver: bridge

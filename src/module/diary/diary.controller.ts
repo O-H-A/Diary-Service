@@ -33,7 +33,7 @@ import {
   GetUserId,
   GetUserToken,
   TransactionManager,
-} from '../../utils/decorators';
+} from '../../common/decorator';
 import { DiaryService } from './diary.service';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { CreateDiaryDto } from './dto/create-diary.dto';
