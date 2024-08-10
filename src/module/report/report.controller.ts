@@ -2,12 +2,12 @@ import { Body, Controller, Get, Patch, Post, Query, UseGuards, UseInterceptors }
 import { ReportInfoDto } from './dto/reportInfo.dto';
 import { GetUserId, GetUserToken, TransactionManager } from '../../common/decorator';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
-import { TransactionInterceptor } from '../../interceptors/transaction.interceptor';
+import { TransactionInterceptor } from '../../common/interceptors/transaction.interceptor';
 import { DiaryReportService } from './report.service';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ActionInfoDto } from './dto/actionInfo.dto';
 import { ReportReasonEnum } from './enum/enum';
-import { DIARY_ADMIN_REPORTLIST, DIARY_ADMIN_REPORT_ACTION, DIARY_REPORT } from '../../common/swagger/report.swagger';
+import { DIARY_ADMIN_REPORTLIST, DIARY_ADMIN_REPORT_ACTION, DIARY_REPORT } from './swagger/report.swagger';
 import { UserRolesGuard } from '../../auth/guards/userRole.guard';
 import { UserRole } from '../../common/decorator/userRole.decorator';
 import { UserGradeEnum } from '../../common/enum/enum';

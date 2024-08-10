@@ -1,18 +1,18 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './module/app.module';
 import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
-import * as morgan from 'morgan';
+// import * as morgan from 'morgan';
 import { WINSTON_MODULE_NEST_PROVIDER, WinstonModule } from 'nest-winston';
 import { WINSTON_CONFIG } from './config/logger.config';
-import { SwaggerConfig } from './config/swagger.config';
-import { SwaggerModule } from '@nestjs/swagger';
-import { TransformInterceptor } from './interceptors/response.interceptors';
+import { setupSwagger } from './config/swagger.config';
+import { ResponseInterceptor } from './common/interceptors/response.interceptors';
 import { ValidationPipe } from '@nestjs/common';
 import { EurekaClient } from './config/eureka.config';
 import { ConfigService } from '@nestjs/config';
 import { json } from 'body-parser';
 import { ErrorFilter } from './common/filter/exception.filter';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { validationOptions } from './config/validation.config';
 
 async function bootstrap() {
   const winstonLogger = WinstonModule.createLogger(WINSTON_CONFIG);
@@ -26,6 +26,9 @@ async function bootstrap() {
   const SERVER_PORT: number = configService.get<number>('PORT');
 
   app.set('trust proxy', true);
+
+  // swagger setting
+  setupSwagger(app);
 
   // cors settings
   const corsOptions: CorsOptions = {
@@ -42,22 +45,18 @@ async function bootstrap() {
   // app.use(morgan('dev')); // dev
 
   // use global interceptors
-  app.useGlobalInterceptors(new TransformInterceptor());
+  app.useGlobalInterceptors(new ResponseInterceptor());
 
-  // Exception Filter 적용
+  // exception filter 적용
   app.useGlobalFilters(new ErrorFilter(winstonLogger));
+
+  // validation pipe setting
+  app.useGlobalPipes(new ValidationPipe(validationOptions));
 
   // payload size limit
   app.use(json({ limit: '10mb' }));
 
-  // run swagger
-  const config = new SwaggerConfig().initializeOptions();
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/diary/swagger', app, document, {
-    swaggerOptions: { defaultModelsExpandDepth: -1 },
-  });
-
-  /* Winston Logger Setting, 서버 로그 처리 */
+  // winston logger setting
   app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
 
   try {
