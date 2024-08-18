@@ -12,11 +12,11 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { GetUserId, GetUserToken, TransactionManager } from '../../common/decorator';
+import { CurrentUserId, CurrentUserToken, TransactionManager } from '../../common/decorator';
 import { DiaryService } from './diary.service';
-import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../../auth/guard/jwt-auth.guard';
 import { CreateDiaryDto } from './dto/create-diary.dto';
-import { TransactionInterceptor } from '../../common/interceptors/transaction.interceptor';
+import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
 import { UpdateDiaryDto } from './dto/update-diary.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { DiariesInfoDto } from './dto/diaries-info.dto';
@@ -36,7 +36,7 @@ import {
 } from '@nestjs/swagger';
 import { DIARIES_OTHER_USERS, DIARY, DIARY_LIKES, DIARY_MY, SPECIFIC_DIARIES } from './swagger/diary.swagger';
 
-ApiTags('DIARY');
+@ApiTags('DIARY')
 @Controller('api/diary')
 export class DiaryController {
   constructor(private readonly diaryService: DiaryService) {}
@@ -51,7 +51,7 @@ export class DiaryController {
   @Post('/')
   async createDiary(
     @Body() dto: CreateDiaryDto,
-    @GetUserId() userId: number,
+    @CurrentUserId() userId: number,
     @TransactionManager() transactionManager,
     @UploadedFiles() file: Express.Multer.File[],
   ): Promise<{ message: string }> {
@@ -81,8 +81,8 @@ export class DiaryController {
   @UseGuards(JwtAuthGuard)
   @Get('my')
   async readUserDiary(
-    @GetUserId() userId: number,
-    @GetUserToken() token: string,
+    @CurrentUserId() userId: number,
+    @CurrentUserToken() token: string,
   ): Promise<{ message: string; result: any }> {
     const result = await this.diaryService.readDiary(userId, token);
     return { message: '전체 기간 조회 성공', result };
@@ -96,7 +96,7 @@ export class DiaryController {
   @Get('all-diaries/:userId')
   async readDiary(
     @Param('userId') userId: number,
-    @GetUserToken() token: string,
+    @CurrentUserToken() token: string,
   ): Promise<{ message: string; result: any }> {
     const result = await this.diaryService.readDiary(userId, token);
     return { message: '전체 기간 조회 성공', result };
@@ -114,7 +114,7 @@ export class DiaryController {
   @Post('likes/:diaryId')
   async createDiaryLike(
     @Param('diaryId') diaryId: number,
-    @GetUserId() userId: number,
+    @CurrentUserId() userId: number,
     @TransactionManager() transactionManager,
   ): Promise<{ message: string }> {
     await this.diaryService.createDiaryLike(diaryId, userId, transactionManager);
@@ -132,7 +132,7 @@ export class DiaryController {
   @Delete('likes/:diaryId')
   async deleteDiaryLike(
     @Param('diaryId') diaryId: number,
-    @GetUserId() userId: number,
+    @CurrentUserId() userId: number,
     @TransactionManager() transactionManager,
   ): Promise<{ message: string }> {
     await this.diaryService.deleteDiaryLike(diaryId, userId, transactionManager);
@@ -147,7 +147,7 @@ export class DiaryController {
   @Get('likes/:diaryId')
   async getDiaryLike(
     @Param('diaryId') diaryId: number,
-    @GetUserId() userId: number,
+    @CurrentUserId() userId: number,
   ): Promise<{ message: string; result: any }> {
     const result = await this.diaryService.getDiaryLike(diaryId, userId);
     return { message: '좋아요 정보 조회 성공', result };
@@ -166,7 +166,7 @@ export class DiaryController {
   async updateDiary(
     @Param('diaryId') diaryId: number,
     @Body() dto: UpdateDiaryDto,
-    @GetUserId() userId: number,
+    @CurrentUserId() userId: number,
     @TransactionManager() transactionManager,
     @UploadedFiles() file: Express.Multer.File[],
   ): Promise<{ message: string }> {
@@ -190,7 +190,7 @@ export class DiaryController {
   @Delete(':diaryId')
   async deleteDiary(
     @Param('diaryId') diaryId: number,
-    @GetUserId() userId: number,
+    @CurrentUserId() userId: number,
     @TransactionManager() transactionManager,
   ): Promise<{ message: string }> {
     await this.diaryService.deleteDiary(diaryId, userId, transactionManager);
@@ -207,7 +207,7 @@ export class DiaryController {
   @Get(':diaryId')
   async readDiaryDetail(
     @Param('diaryId') diaryId: number,
-    @GetUserToken() token: string,
+    @CurrentUserToken() token: string,
     @TransactionManager() transactionManager,
   ): Promise<{ message: string; result: any }> {
     const result = await this.diaryService.readDiaryDetail(diaryId, token, transactionManager);

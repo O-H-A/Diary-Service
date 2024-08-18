@@ -5,7 +5,7 @@ import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.int
 import { WINSTON_MODULE_NEST_PROVIDER, WinstonModule } from 'nest-winston';
 import { WINSTON_CONFIG } from './config/logger.config';
 import { setupSwagger } from './config/swagger.config';
-import { ResponseInterceptor } from './common/interceptors/response.interceptors';
+import { ResponseInterceptor } from './common/interceptor/response.interceptor';
 import { ValidationPipe } from '@nestjs/common';
 import { EurekaClient } from './config/eureka.config';
 import { ConfigService } from '@nestjs/config';

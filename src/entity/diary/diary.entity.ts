@@ -1,5 +1,5 @@
 import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
-import { WeatherType } from '../../module/diary/enums/weather.enum';
+import { WeatherType } from '../../module/diary/enum/weather.enum';
 import { DiaryFileEntity } from './diaryFile.entity';
 import { ReportEntity } from '../report/report.entity';
 import { DiaryLikeEntity } from './diaryLikes.entity';

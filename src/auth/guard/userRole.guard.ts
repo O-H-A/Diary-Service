@@ -8,10 +8,10 @@ export class UserRolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
-    const requireRole = this.reflector.get<UserGradeEnum>('roles', context.getHandler());
+    const requireRole: UserGradeEnum = this.reflector.get<UserGradeEnum>('roles', context.getHandler());
     const { userGrade } = context.switchToHttp().getRequest().user;
 
-    const userGradeList = Object.values(UserGradeEnum);
+    const userGradeList: UserGradeEnum[] = Object.values(UserGradeEnum);
     const [loginUserRole, requireLevel] = [
       userGradeList.indexOf(UserGradeEnum[userGrade]),
       userGradeList.indexOf(requireRole),

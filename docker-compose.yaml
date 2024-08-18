@@ -11,6 +11,7 @@ services:
     volumes:
       - ./src:/app/src
       - ./logs:/app/logs
+      - ~/oha/upload/diary:/home/upload/diary
     env_file:
       - './.env'
     environment:

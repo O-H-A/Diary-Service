@@ -3,7 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ReportEntity } from '../../entity/report/report.entity';
 import { DiaryReportController } from './report.controller';
 import { DiaryReportService } from './report.service';
-import { JwtStrategy } from '../../auth/strategies/jwt.access.strategy';
+import { JwtStrategy } from '../../auth/strategy/jwt.access.strategy';
 import { ReportReasonEntity } from '../../entity/report/reportReason.entity';
 import { HttpModule } from '@nestjs/axios';
 import { DiaryEntity } from '../../entity/diary/diary.entity';

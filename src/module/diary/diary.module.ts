@@ -1,7 +1,7 @@
 import { Logger, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DiaryEntity } from '../../entity/diary/diary.entity';
-import { JwtStrategy } from '../../auth/strategies/jwt.access.strategy';
+import { JwtStrategy } from '../../auth/strategy/jwt.access.strategy';
 import { DiaryController } from './diary.controller';
 import { DiaryService } from './diary.service';
 import { HttpModule } from '@nestjs/axios';

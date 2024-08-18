@@ -16,12 +16,13 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'access') {
 
   async validate(req: Request) {
     try {
-      const userToken = req.headers['authorization']?.slice(7);
+      const userToken: string = req.headers['authorization']?.slice(7);
       if (!userToken) {
         throw new BadRequestException('There is no access token in header');
       }
-      const secretKey = this.configService.get('JWT_SECRET_KEY');
+      const secretKey: string = this.configService.get('JWT_SECRET_KEY');
       const payload = jwt.verify(userToken, secretKey);
+      console.log(payload);
       return payload;
     } catch (e) {
       this.logger.error(e);
