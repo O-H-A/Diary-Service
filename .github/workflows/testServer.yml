@@ -13,7 +13,7 @@ jobs:
         with:
           host: ${{ secrets.TEST_SSH_HOST }}
           username: ${{ secrets.TEST_SSH_USER }}
-          key: ${{ secrets.TEST_PRIVATE_KEY }}
+          password: ${{ secrets.TEST_PRIVATE_KEY }}
           timeout: 60s
           script: |
             echo "############# CREATE .ENV #############"
