@@ -1,16 +1,16 @@
 import { Body, Controller, Get, Patch, Post, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ReportInfoDto } from './dto/reportInfo.dto';
-import { GetUserId, GetUserToken, TransactionManager } from 'src/utils/decorators';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { TransactionInterceptor } from 'src/interceptors/transaction.interceptor';
+import { CurrentUserId, CurrentUserToken, TransactionManager } from '../../common/decorator';
+import { JwtAuthGuard } from '../../auth/guard/jwt-auth.guard';
+import { TransactionInterceptor } from '../../common/interceptor/transaction.interceptor';
 import { DiaryReportService } from './report.service';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ActionInfoDto } from './dto/actionInfo.dto';
 import { ReportReasonEnum } from './enum/enum';
-import { DIARY_ADMIN_REPORTLIST, DIARY_ADMIN_REPORT_ACTION, DIARY_REPORT } from 'src/common/swagger/report.swagger';
-import { UserRolesGuard } from 'src/auth/guards/userRole.guard';
-import { UserRole } from 'src/common/decorator/userRole.decorator';
-import { UserGradeEnum } from 'src/common/enum/enum';
+import { DIARY_ADMIN_REPORTLIST, DIARY_ADMIN_REPORT_ACTION, DIARY_REPORT } from './swagger/report.swagger';
+import { UserRolesGuard } from '../../auth/guard/userRole.guard';
+import { UserRole } from '../../common/decorator/role.decorator';
+import { UserGradeEnum } from '../../common/enum/enum';
 
 @Controller('api/diary')
 export class DiaryReportController {
@@ -27,7 +27,7 @@ export class DiaryReportController {
   @UserRole(UserGradeEnum.USER)
   @Post('/report')
   async createDiaryReport(
-    @GetUserId() reportingUserId: number,
+    @CurrentUserId() reportingUserId: number,
     @Body() reportInfo: ReportInfoDto,
     @TransactionManager() transactionManager,
   ): Promise<{ message: string }> {
@@ -65,7 +65,7 @@ export class DiaryReportController {
   @UserRole(UserGradeEnum.ADMIN)
   @Get('/admin/report/reportList')
   async getDiaryReportList(
-    @GetUserToken() token: string,
+    @CurrentUserToken() token: string,
     @Query('reasonCode') reasonCode: ReportReasonEnum,
     @Query('isDone') isDone: boolean,
   ): Promise<{ message: string; result: any }> {

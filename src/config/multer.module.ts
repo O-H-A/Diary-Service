@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { MulterModule } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import { FILES, FILE_SIZE } from 'src/utils/constant';
-import { UPLOAD_PATH } from 'src/utils/path';
+import { FILES, FILE_SIZE } from '../common/utils/constant';
+import { UPLOAD_PATH } from '../common/utils/path';
 
 @Module({
   imports: [
@@ -18,14 +18,22 @@ import { UPLOAD_PATH } from 'src/utils/path';
         },
       }),
       fileFilter(req, file, callback) {
-        const allowedTypes = ['image/jpeg', 'image/png', 'image/bmp', 'image/gif', 'image/jpg', 'image/svg+xml','application/octet-stream'];
-        console.log(file)
+        const allowedTypes = [
+          'image/jpeg',
+          'image/png',
+          'image/bmp',
+          'image/gif',
+          'image/jpg',
+          'image/svg+xml',
+          'application/octet-stream',
+        ];
+        console.log(file);
         if (!allowedTypes.includes(file.mimetype)) {
           throw new Error('Invalid file type');
         }
         callback(null, true);
       },
-      limits: { fileSize: FILE_SIZE, files: FILES },
+      // limits: { fileSize: FILE_SIZE, files: FILES },
     }),
   ],
   exports: [MulterModule],

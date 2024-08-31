@@ -13,16 +13,15 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { DiaryEntity } from '../../entity/diary/diary.entity';
 import { EntityManager, Repository, In } from 'typeorm';
-import { CreateDiaryDto } from './dto/create-diary.dto';
 import { UpdateDiaryDto } from './dto/update-diary.dto';
 import { HttpService } from '@nestjs/axios';
 import { lastValueFrom } from 'rxjs';
-import { DiaryLikeEntity } from '../../entity/diary/diary-likes.entity';
+import { DiaryLikeEntity } from '../../entity/diary/diaryLikes.entity';
 import { ConfigService } from '@nestjs/config';
-import { DiaryFileEntity } from 'src/entity/diary/diary-file.entity';
+import { DiaryFileEntity } from '../../entity/diary/diaryFile.entity';
 import { unlink } from 'fs/promises';
-import { UPLOAD_PATH } from 'src/utils/path';
-import { ProducerService } from 'src/module/kafka/kafka.producer.service';
+import { UPLOAD_PATH } from '../../common/utils/path';
+import { ProducerService } from '../../module/kafka/kafka.producer.service';
 import { ConsumerService } from '../kafka/kafka.consumer.service';
 import { ProducerRecord } from 'kafkajs';
 
@@ -43,7 +42,7 @@ export class DiaryService implements OnModuleInit {
 
   async createDiary(dto, file, userId: number, transactionManager: EntityManager) {
     try {
-      const fileName = file[0].filename
+      const fileName = file[0].filename;
       if (!fileName) {
         throw new BadRequestException('다이어리 사진은 필수입니다.');
       }
@@ -69,7 +68,7 @@ export class DiaryService implements OnModuleInit {
     transactionManager: EntityManager,
   ) {
     try {
-      const fileName = file[0].filename
+      const fileName = file[0].filename;
       const isSameUser = await this.isSameUser(userId, diaryId);
       if (!isSameUser) {
         throw new ForbiddenException('다이어리 수정 권한이 없습니다');
@@ -117,9 +116,6 @@ export class DiaryService implements OnModuleInit {
         throw new NotFoundException('다이어리가 이미 삭제되었거나 존재하지 않습니다');
       }
 
-      // 다이어리 좋아요 정보 삭제 (만약 있다면)
-      await transactionManager.query(`DELETE FROM public."Diary-Like" WHERE "diaryId" = ${diaryId}`);
-
       // 다이어리 삭제
       const result = await transactionManager.delete(DiaryEntity, { diaryId });
       if (result.affected === 0) {
@@ -144,7 +140,7 @@ export class DiaryService implements OnModuleInit {
       const accessToken = token;
       const headers = { Authorization: `Bearer ${accessToken}` };
       let apiUrl;
-      if (process.env.NODE_ENV === 'dev') {
+      if (process.env.NODE_ENV === 'local') {
         apiUrl = `http://${process.env.HOST}:3000/api/user/specificuser/${userId}`;
       } else {
         apiUrl = `http://${process.env.Eureka_HOST}/api/user/specificuser/${userId}`;
@@ -175,7 +171,7 @@ export class DiaryService implements OnModuleInit {
   async readDiaryDetail(diaryId: number, token: string, transactionManager: EntityManager) {
     try {
       // 조회수 1증가
-      await transactionManager.query(`UPDATE public."Diary" SET "views" = "views" + 1 WHERE "diaryId" = ${diaryId} `);
+      await transactionManager.increment(DiaryEntity, { diaryId }, 'views', 1);
 
       const viewUpdatedDiary = await transactionManager.findOne(DiaryEntity, {
         where: { diaryId },
@@ -191,7 +187,7 @@ export class DiaryService implements OnModuleInit {
       const accessToken = token;
       const headers = { Authorization: `Bearer ${accessToken}` };
       let apiUrl;
-      if (process.env.NODE_ENV === 'dev') {
+      if (process.env.NODE_ENV === 'local') {
         apiUrl = `http://${process.env.HOST}:3000/api/user/specificuser/${userId}`;
       } else {
         apiUrl = `http://${process.env.Eureka_HOST}/api/user/specificuser/${userId}`;
@@ -224,8 +220,7 @@ export class DiaryService implements OnModuleInit {
       const diaryLike = await transactionManager.save(newDiaryLike);
 
       // 좋아요 클릭 수 업데이트 (1증가)
-      await transactionManager.query(`UPDATE public."Diary" SET "likes" = "likes" + 1 WHERE "diaryId" = ${diaryId}`);
-
+      await transactionManager.increment(DiaryEntity, { diaryId }, 'likes', 1);
       // 다이어리 정보가 없을 경우 에러 처리
       const diary = await this.diaryRepository.findOne({ where: { diaryId }, relations: { fileRelation: true } });
       if (!diary) {
@@ -259,8 +254,7 @@ export class DiaryService implements OnModuleInit {
       if (result.affected === 0) {
         throw new ConflictException('좋아요를 이미 취소했거나 다이어리가 존재하지 않습니다');
       }
-      await transactionManager.query(`UPDATE public."Diary" SET "likes" = "likes" - 1 WHERE "diaryId" = ${diaryId}`);
-
+      await transactionManager.decrement(DiaryEntity, { diaryId }, 'likes', 1);
       return;
     } catch (e) {
       this.logger.error(e);
