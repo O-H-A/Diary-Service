@@ -2,16 +2,16 @@ import { Inject, Injectable, Logger, LoggerService, NotFoundException } from '@n
 import { ReportInfoDto } from './dto/reportInfo.dto';
 import { EntityManager, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DiaryReportEntity } from 'src/entity/report/diary-report.entity';
+import { ReportEntity } from '../../entity/report/report.entity';
 import { ActionInfoDto } from './dto/actionInfo.dto';
 import { HttpService } from '@nestjs/axios';
 import { lastValueFrom } from 'rxjs';
 import { ReportReasonEnum } from './enum/enum';
-import { DiaryEntity } from 'src/entity/diary/diary.entity';
+import { DiaryEntity } from '../../entity/diary/diary.entity';
 import { ProducerService } from '../kafka/kafka.producer.service';
 import { ConsumerService } from '../kafka/kafka.consumer.service';
 import { ProducerRecord } from 'kafkajs';
-import { ReportReasonEntity } from 'src/entity/report/reportReason.entity';
+import { ReportReasonEntity } from '../../entity/report/reportReason.entity';
 
 @Injectable()
 export class DiaryReportService {
@@ -19,8 +19,8 @@ export class DiaryReportService {
     @Inject(Logger)
     private readonly logger: LoggerService,
     private readonly httpService: HttpService,
-    @InjectRepository(DiaryReportEntity)
-    private readonly diaryReportRepository: Repository<DiaryReportEntity>,
+    @InjectRepository(ReportEntity)
+    private readonly diaryReportRepository: Repository<ReportEntity>,
     @InjectRepository(DiaryEntity)
     private readonly diaryRepository: Repository<DiaryEntity>,
     @InjectRepository(ReportReasonEntity)
@@ -35,10 +35,10 @@ export class DiaryReportService {
       if (!diary) {
         throw new NotFoundException('신고할 다이어리가 존재하지 않습니다.');
       }
-      const newReport = new DiaryReportEntity();
+      const newReport = new ReportEntity();
       Object.assign(newReport, { reportingUserId, ...reportInfo });
       const report = await transactionManager.save(newReport);
-      const reportReason = await this.reportReasonRepository.findOne({ where: { code: report.reasonCode } });
+      const reportReason = await this.reportReasonRepository.findOne({ where: { reasonCode: report.reasonCode } });
       const reportEvent = {
         reporting_user_id: reportingUserId,
         reported_user_id: diary.userId,
@@ -68,7 +68,7 @@ export class DiaryReportService {
       }
 
       const actionDtm = new Date();
-      await transactionManager.update(DiaryReportEntity, reportId, {
+      await transactionManager.update(ReportEntity, reportId, {
         actionCodes,
         actionDtm,
         isDone: true,
@@ -97,7 +97,7 @@ export class DiaryReportService {
         diaryReportList.map(async (diaryReport) => {
           const reportingUserId = diaryReport.reportingUserId;
           let apiUrl;
-          if (process.env.NODE_ENV === 'dev') {
+          if (process.env.NODE_ENV === 'local') {
             apiUrl = `http://${process.env.HOST}:3000/api/user/specificuser/${reportingUserId}`;
           } else {
             apiUrl = `http://${process.env.Eureka_HOST}/api/user/specificuser/${reportingUserId}`;
@@ -117,7 +117,7 @@ export class DiaryReportService {
         updateDiaryReportList.map(async (updateDiaryReport) => {
           const reportedUserId = updateDiaryReport['reportedUserId'];
           let apiUrl;
-          if (process.env.NODE_ENV === 'dev') {
+          if (process.env.NODE_ENV === 'local') {
             apiUrl = `http://${process.env.HOST}:3000/api/user/specificuser/${reportedUserId}`;
           } else {
             apiUrl = `http://${process.env.Eureka_HOST}/api/user/specificuser/${reportedUserId}`;

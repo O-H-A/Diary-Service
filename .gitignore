@@ -35,16 +35,6 @@ lerna-debug.log*
 !.vscode/launch.json
 !.vscode/extensions.json
 
-# dotenv environment variable files
-.env
-.env.development.local
-.env.test.local
-.env.production.local
-.env.local
-
-# temp directory
-.temp
-.tmp
 
 # Runtime data
 pids
@@ -57,3 +47,7 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 # env
 **/*.env
+
+# docker compose
+docker-compose.dev.yaml
+docker-compose.prod.yaml

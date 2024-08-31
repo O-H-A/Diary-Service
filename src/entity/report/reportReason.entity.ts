@@ -1,14 +1,14 @@
 import { Column, Entity, OneToMany, PrimaryColumn } from 'typeorm';
-import { DiaryReportEntity } from './diary-report.entity';
+import { ReportEntity } from './report.entity';
 
 @Entity('report_reason')
 export class ReportReasonEntity {
-  @PrimaryColumn({ type: 'varchar', nullable: false })
-  code: string;
+  @PrimaryColumn({ name: 'reason_code', nullable: false })
+  reasonCode: string;
 
-  @Column({ type: 'varchar', nullable: false })
+  @Column({ name: 'reason_name', nullable: false })
   reasonName: string;
 
-  @OneToMany(() => DiaryReportEntity, (report) => report.reasonCodeRelation)
-  reportRelation: DiaryReportEntity[];
+  @OneToMany(() => ReportEntity, (report) => report.reasonCodeRelation)
+  reportRelation: ReportEntity;
 }

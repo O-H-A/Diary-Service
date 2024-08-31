@@ -1,10 +1,10 @@
 import { Eureka } from 'eureka-js-client';
-import { Eureka_Heartbeat_Interval, Eureka_Registery_Interval } from 'src/utils/constant';
+import { EUREKA_HEARTBEAT_INTERVAL, EUREKA_REGISTERY_INTERVAL } from '../common/utils/constant';
 
 const env = process.env.NODE_ENV;
 
-const appName = `DIARY-SERVICE${env === 'product' ? '-DEV' : ''}`;
-const executeUrl = `${process.env.HOST}:${process.env.PORT1}`;
+const appName = `DIARY-SERVICE${env === 'dev' ? '-DEV' : ''}`;
+const executeUrl = `${process.env.HOST}:${process.env.PORT}`;
 
 export const EurekaClient = new Eureka({
   instance: {
@@ -26,7 +26,7 @@ export const EurekaClient = new Eureka({
     host: process.env.Eureka_HOST,
     port: process.env.Eureka_PORT,
     servicePath: '/eureka/apps/',
-    heartbeatInterval: Eureka_Heartbeat_Interval,
-    registryFetchInterval: Eureka_Registery_Interval,
+    heartbeatInterval: EUREKA_HEARTBEAT_INTERVAL,
+    registryFetchInterval: EUREKA_REGISTERY_INTERVAL,
   },
 });
