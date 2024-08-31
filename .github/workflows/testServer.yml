@@ -18,7 +18,7 @@ jobs:
           timeout: 60s
           script: |
             echo "############# MOVE DIRECTORY #############"
-            cd ../../diary/api
+            cd /home/testServer/diary/api
             echo "############# GIT PULL #############"
             sudo git pull origin dev
             echo "############# CREATE .ENV #############"
