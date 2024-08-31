@@ -33,14 +33,13 @@ export class CreateDiaryDto {
 
   @ApiProperty({
     example: true,
-    description: '선택 입력 값입니다. 미입력 시 기본 값으로 true(공개)가 저장됩니다',
-    required: false,
+    description: '필수 입력 값입니다',
+    required: true,
   })
-  @IsOptional()
-  readonly isPublic?: boolean;
+  @IsNotEmpty()
+  readonly isPublic: boolean;
 
-  @ApiProperty({ example: '뉴욕', description: '선택 입력 값입니다. string 형식 아무 문장 입력 가능', required: false })
-  @IsOptional()
-  @IsString()
-  readonly location?: string;
+  @ApiProperty({ example: '뉴욕', description: '선택 입력 값입니다. string 형식 아무 문장 입력 가능', required: true })
+  @IsNotEmpty({ message: '위치 입력은 필수입니다' })
+  readonly location: string;
 }

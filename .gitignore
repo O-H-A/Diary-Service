@@ -47,3 +47,10 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 # env
 **/*.env
+
+# script
+script.sh
+
+# docker compose
+docker-compose.dev.yaml
+docker-compose.prod.yaml

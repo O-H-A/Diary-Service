@@ -14,7 +14,9 @@ const dailyOptions = (level: string) => {
       winston.format.timestamp({
         format: 'YYYY-MM-DD HH:mm:ss',
       }),
-      winston.format.printf((info) => `${info.timestamp} [${info.level}] ${info.message}`),
+      winston.format.printf(({ level, message, timestamp, stack, context }) => {
+        return `${timestamp} [${level}]: ${message} ${stack ? stack : ''} ${context ? JSON.stringify(context) : ''}`;
+      }),
     ),
   };
 };
@@ -22,17 +24,18 @@ const dailyOptions = (level: string) => {
 export const WINSTON_CONFIG = {
   transports: [
     new winston.transports.Console({
-      level: 'silly',
+      level: 'info',
       format: winston.format.combine(
+        winston.format.colorize({ all: true }),
         winston.format.timestamp({
           format: () => moment().tz('Asia/Seoul').format('MM-DD HH:mm:ss'),
         }),
-        winston.format.colorize(),
-        winston.format.printf(({ level, message, timestamp }) => {
-          return `${timestamp} [${level}]: ${message}`;
+        winston.format.printf(({ level, message, timestamp, stack, context }) => {
+          return `${timestamp} [${level}]: ${message} ${stack ? stack : ''} ${context ? JSON.stringify(context) : ''}`;
         }),
       ),
     }),
+    new winstonDaily(dailyOptions('info')),
     new winstonDaily(dailyOptions('error')),
   ],
 };

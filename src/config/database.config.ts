@@ -4,7 +4,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 export const DATABASE_CONFIG: TypeOrmModuleAsyncOptions = {
   imports: [ConfigModule],
   useFactory: (configService: ConfigService) => ({
-    type: 'mariadb',
+    type: 'postgres',
     host: configService.get('DB_HOST'),
     port: +configService.get('DB_PORT'),
     username: configService.get('DB_USER'),
@@ -12,7 +12,7 @@ export const DATABASE_CONFIG: TypeOrmModuleAsyncOptions = {
     database: configService.get('DB_NAME'),
     charset: 'utf8mb4',
     entities: [__dirname + '/../**/*.entity{.ts,.js}'],
-    synchronize: true,
+    synchronize: false,
   }),
   inject: [ConfigService],
 };

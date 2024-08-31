@@ -27,7 +27,7 @@ export class DiaryEntity {
   @Column({ name: 'location', nullable: true })
   location: string;
 
-  @Column({ name: 'is_public', type: 'boolean', default: true, nullable: false })
+  @Column({ name: 'is_public', type: 'boolean', nullable: true })
   isPublic: boolean;
 
   @Column({ name: 'likes', type: 'smallint', default: 0, nullable: false })

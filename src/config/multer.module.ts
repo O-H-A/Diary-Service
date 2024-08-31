@@ -33,7 +33,7 @@ import { UPLOAD_PATH } from '../common/utils/path';
         }
         callback(null, true);
       },
-      limits: { fileSize: FILE_SIZE, files: FILES },
+      // limits: { fileSize: FILE_SIZE, files: FILES },
     }),
   ],
   exports: [MulterModule],
