@@ -17,6 +17,10 @@ jobs:
           port: 22
           timeout: 60s
           script: |
+            echo "############# MOVE DIRECTORY #############"
+            cd ../../diary/api
+            echo "############# GIT PULL #############"
+            sudo git pull origin dev
             echo "############# CREATE .ENV #############"
             [ -f .env ] && rm .env
             touch .env
@@ -36,9 +40,5 @@ jobs:
             echo "KAFKA_HOST=${{ secrets.KAFKA_HOST }}" >> .env
             echo "KAFKA_PORT=${{ secrets.KAFKA_PORT }}" >> .env
             echo "KAFKA_AUTO_OFFSET_RESET=${{ secrets.KAFKA_AUTO_OFFSET_RESET }}" >> .env
-            echo "############# MOVE DIRECTORY #############"
-            cd ../../diary/api
-            echo "############# GIT PULL #############"
-            sudo git pull origin dev
             echo "############# RUN SCRIPT #############"
             sh script.sh
