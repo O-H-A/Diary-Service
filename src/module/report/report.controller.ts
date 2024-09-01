@@ -11,6 +11,7 @@ import { DIARY_ADMIN_REPORTLIST, DIARY_ADMIN_REPORT_ACTION, DIARY_REPORT } from 
 import { UserRolesGuard } from '../../auth/guard/userRole.guard';
 import { UserRole } from '../../common/decorator/role.decorator';
 import { UserGradeEnum } from '../../common/enum/enum';
+import { ResponseDto } from 'src/common/dto/response.dto';
 
 @Controller('api/diary')
 export class DiaryReportController {
@@ -30,9 +31,12 @@ export class DiaryReportController {
     @CurrentUserId() reportingUserId: number,
     @Body() reportInfo: ReportInfoDto,
     @TransactionManager() transactionManager,
-  ): Promise<{ message: string }> {
+  ): Promise<ResponseDto> {
     await this.reportService.createDiaryReport(reportingUserId, reportInfo, transactionManager);
-    return { message: '신고 등록 성공' };
+
+    const result: ResponseDto = { message: '신고 등록 성공' };
+
+    return result;
   }
 
   @ApiTags('DIARY (관리자)')
@@ -49,9 +53,12 @@ export class DiaryReportController {
   async updateDiaryReportAction(
     @Body() actionInfo: ActionInfoDto,
     @TransactionManager() transactionManager,
-  ): Promise<{ message: string }> {
+  ): Promise<ResponseDto> {
     await this.reportService.updateDiaryReportAction(actionInfo, transactionManager);
-    return { message: '신고 조치 업데이트 성공' };
+
+    const result: ResponseDto = { message: '신고 조치 업데이트 성공' };
+
+    return result;
   }
 
   @ApiTags('DIARY (관리자)')
@@ -68,8 +75,11 @@ export class DiaryReportController {
     @CurrentUserToken() token: string,
     @Query('reasonCode') reasonCode: ReportReasonEnum,
     @Query('isDone') isDone: boolean,
-  ): Promise<{ message: string; result: any }> {
-    const result = await this.reportService.getDiaryReportList(token, reasonCode, isDone);
-    return { message: '모든 다이어리 신고 목록 조회 성공', result };
+  ): Promise<ResponseDto> {
+    const reports = await this.reportService.getDiaryReportList(token, reasonCode, isDone);
+
+    const result: ResponseDto = { message: '모든 다이어리 신고 목록 조회 성공', data: reports };
+
+    return result;
   }
 }
