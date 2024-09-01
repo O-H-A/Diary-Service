@@ -35,6 +35,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { DIARIES_OTHER_USERS, DIARY, DIARY_LIKES, DIARY_MY, SPECIFIC_DIARIES } from './swagger/diary.swagger';
+import { ResponseDto } from 'src/common/dto/response.dto';
 
 @ApiTags('DIARY')
 @Controller('api/diary')
@@ -54,9 +55,12 @@ export class DiaryController {
     @CurrentUserId() userId: number,
     @TransactionManager() transactionManager,
     @UploadedFiles() file: Express.Multer.File[],
-  ): Promise<{ message: string }> {
+  ): Promise<ResponseDto> {
     await this.diaryService.createDiary(dto, file, userId, transactionManager);
-    return { message: '등록 성공' };
+
+    const result: ResponseDto = { message: '등록 성공' };
+
+    return result;
   }
 
   @ApiOperation(SPECIFIC_DIARIES.POST.API_OPERATION)
@@ -70,9 +74,12 @@ export class DiaryController {
   async getSpecificDiaries(
     @Body() dto: DiariesInfoDto,
     @TransactionManager() transactionManager,
-  ): Promise<{ message: string; result: any }> {
-    const result = await this.diaryService.getSpecificDiaries(dto, transactionManager);
-    return { message: '조회 성공', result };
+  ): Promise<ResponseDto> {
+    const diaries = await this.diaryService.getSpecificDiaries(dto, transactionManager);
+
+    const result: ResponseDto = { message: '조회 성공', data: diaries };
+
+    return result;
   }
 
   @ApiOperation(DIARY_MY.GET.API_OPERATION)
@@ -80,12 +87,12 @@ export class DiaryController {
   @ApiBearerAuth('access-token')
   @UseGuards(JwtAuthGuard)
   @Get('my')
-  async readUserDiary(
-    @CurrentUserId() userId: number,
-    @CurrentUserToken() token: string,
-  ): Promise<{ message: string; result: any }> {
-    const result = await this.diaryService.readDiary(userId, token);
-    return { message: '전체 기간 조회 성공', result };
+  async readUserDiary(@CurrentUserId() userId: number, @CurrentUserToken() token: string): Promise<ResponseDto> {
+    const diaries = await this.diaryService.readDiary(userId, token);
+
+    const result: ResponseDto = { message: '전체 기간 조회 성공', data: diaries };
+
+    return result;
   }
 
   @ApiOperation(DIARIES_OTHER_USERS.GET.API_OPERATION)
@@ -94,12 +101,12 @@ export class DiaryController {
   @ApiBearerAuth('access-token')
   @UseGuards(JwtAuthGuard)
   @Get('all-diaries/:userId')
-  async readDiary(
-    @Param('userId') userId: number,
-    @CurrentUserToken() token: string,
-  ): Promise<{ message: string; result: any }> {
-    const result = await this.diaryService.readDiary(userId, token);
-    return { message: '전체 기간 조회 성공', result };
+  async readDiary(@Param('userId') userId: number, @CurrentUserToken() token: string): Promise<ResponseDto> {
+    const diaries = await this.diaryService.readDiary(userId, token);
+
+    const result: ResponseDto = { message: '전체 기간 조회 성공', data: diaries };
+
+    return result;
   }
 
   @ApiOperation(DIARY_LIKES.POST.API_OPERATION)
@@ -116,9 +123,12 @@ export class DiaryController {
     @Param('diaryId') diaryId: number,
     @CurrentUserId() userId: number,
     @TransactionManager() transactionManager,
-  ): Promise<{ message: string }> {
+  ): Promise<ResponseDto> {
     await this.diaryService.createDiaryLike(diaryId, userId, transactionManager);
-    return { message: '좋아요 생성 성공' };
+
+    const result: ResponseDto = { message: '좋아요 생성 성공' };
+
+    return result;
   }
 
   @ApiOperation(DIARY_LIKES.DELETE.API_OPERATION)
@@ -134,9 +144,12 @@ export class DiaryController {
     @Param('diaryId') diaryId: number,
     @CurrentUserId() userId: number,
     @TransactionManager() transactionManager,
-  ): Promise<{ message: string }> {
+  ): Promise<ResponseDto> {
     await this.diaryService.deleteDiaryLike(diaryId, userId, transactionManager);
-    return { message: '좋아요 취소 성공' };
+
+    const result: ResponseDto = { message: '좋아요 취소 성공' };
+
+    return result;
   }
 
   @ApiOperation(DIARY_LIKES.GET.API_OPERATION)
@@ -145,12 +158,12 @@ export class DiaryController {
   @ApiBearerAuth('access-token')
   @UseGuards(JwtAuthGuard)
   @Get('likes/:diaryId')
-  async getDiaryLike(
-    @Param('diaryId') diaryId: number,
-    @CurrentUserId() userId: number,
-  ): Promise<{ message: string; result: any }> {
-    const result = await this.diaryService.getDiaryLike(diaryId, userId);
-    return { message: '좋아요 정보 조회 성공', result };
+  async getDiaryLike(@Param('diaryId') diaryId: number, @CurrentUserId() userId: number): Promise<ResponseDto> {
+    const likesInfo = await this.diaryService.getDiaryLike(diaryId, userId);
+
+    const result: ResponseDto = { message: '좋아요 정보 조회 성공', data: likesInfo };
+
+    return result;
   }
 
   @ApiOperation(DIARY.PUT.API_OPERATION)
@@ -169,13 +182,16 @@ export class DiaryController {
     @CurrentUserId() userId: number,
     @TransactionManager() transactionManager,
     @UploadedFiles() file: Express.Multer.File[],
-  ): Promise<{ message: string }> {
+  ): Promise<ResponseDto> {
     if (file !== undefined) {
       await this.diaryService.updateDiary(diaryId, file, userId, dto, transactionManager);
     } else {
       await this.diaryService.updateDiary(diaryId, undefined, userId, dto, transactionManager);
     }
-    return { message: '수정 성공' };
+
+    const result: ResponseDto = { message: '수정 성공' };
+
+    return result;
   }
 
   @ApiOperation(DIARY.DELETE.API_OPERATION)
@@ -192,9 +208,12 @@ export class DiaryController {
     @Param('diaryId') diaryId: number,
     @CurrentUserId() userId: number,
     @TransactionManager() transactionManager,
-  ): Promise<{ message: string }> {
+  ): Promise<ResponseDto> {
     await this.diaryService.deleteDiary(diaryId, userId, transactionManager);
-    return { message: '삭제 성공' };
+
+    const result: ResponseDto = { message: '삭제 성공' };
+
+    return result;
   }
 
   @ApiOperation(DIARY.GET.API_OPERATION)
@@ -209,8 +228,11 @@ export class DiaryController {
     @Param('diaryId') diaryId: number,
     @CurrentUserToken() token: string,
     @TransactionManager() transactionManager,
-  ): Promise<{ message: string; result: any }> {
-    const result = await this.diaryService.readDiaryDetail(diaryId, token, transactionManager);
-    return { message: '상세 조회 성공', result };
+  ): Promise<ResponseDto> {
+    const diary = await this.diaryService.readDiaryDetail(diaryId, token, transactionManager);
+
+    const result: ResponseDto = { message: '상세 조회 성공', data: diary };
+
+    return result;
   }
 }
