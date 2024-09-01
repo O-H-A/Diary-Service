@@ -3,10 +3,10 @@ import { ReportEntity } from './report.entity';
 
 @Entity('report_reason')
 export class ReportReasonEntity {
-  @PrimaryColumn({ name: 'reason_code', nullable: false })
+  @PrimaryColumn({ name: 'code', nullable: false })
   reasonCode: string;
 
-  @Column({ name: 'reason_name', nullable: false })
+  @Column({ name: 'reasonName', nullable: false })
   reasonName: string;
 
   @OneToMany(() => ReportEntity, (report) => report.reasonCodeRelation)

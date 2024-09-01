@@ -4,12 +4,12 @@ import { DiaryFileEntity } from './diaryFile.entity';
 import { ReportEntity } from '../report/report.entity';
 import { DiaryLikeEntity } from './diaryLikes.entity';
 
-@Entity('diary')
+@Entity('Diary')
 export class DiaryEntity {
-  @PrimaryGeneratedColumn({ name: 'diary_id' })
+  @PrimaryGeneratedColumn({ name: 'diaryId' })
   diaryId: number;
 
-  @Column({ name: 'user_id', nullable: false })
+  @Column({ name: 'userId', nullable: false })
   userId: number;
 
   @Column({ name: 'title', nullable: false })
@@ -21,13 +21,13 @@ export class DiaryEntity {
   @Column({ name: 'content', nullable: true })
   content: string;
 
-  @Column({ name: 'set_date', nullable: false })
+  @Column({ name: 'setDate', nullable: false })
   setDate: string;
 
   @Column({ name: 'location', nullable: true })
   location: string;
 
-  @Column({ name: 'is_public', type: 'boolean', nullable: true })
+  @Column({ name: 'isPublic', type: 'boolean', nullable: true })
   isPublic: boolean;
 
   @Column({ name: 'likes', type: 'smallint', default: 0, nullable: false })
@@ -36,10 +36,10 @@ export class DiaryEntity {
   @Column({ name: 'views', type: 'smallint', default: 0, nullable: false })
   views: number;
 
-  @CreateDateColumn({ name: 'created_at', nullable: false })
+  @CreateDateColumn({ name: 'createdAt', nullable: false })
   createdAt: Date;
 
-  @UpdateDateColumn({ name: 'updated_at', nullable: false })
+  @UpdateDateColumn({ name: 'updatedAt', nullable: false })
   updatedAt: Date;
 
   @OneToMany(() => DiaryFileEntity, (file) => file.diaryIdRelation)
