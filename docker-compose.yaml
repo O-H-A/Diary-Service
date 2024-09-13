@@ -36,3 +36,4 @@ services:
 networks:
   net-default:
     driver: bridge
+    external: true

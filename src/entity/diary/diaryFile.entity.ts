@@ -9,21 +9,21 @@ import {
 } from 'typeorm';
 import { DiaryEntity } from './diary.entity';
 
-@Entity('diary_file')
+@Entity('Diary-File')
 export class DiaryFileEntity {
-  @PrimaryGeneratedColumn({ name: 'file_id' })
+  @PrimaryGeneratedColumn({ name: 'fileId' })
   fileId: number;
 
-  @Column({ name: 'diary_id', nullable: false })
+  @Column({ name: 'diaryId', nullable: false })
   diaryId: number;
 
-  @Column({ name: 'file_url', nullable: false })
+  @Column({ name: 'fileUrl', nullable: false })
   fileUrl: string;
 
-  @CreateDateColumn({ name: 'created_at', nullable: false })
+  @CreateDateColumn({ name: 'createdAt', nullable: false })
   createdAt: Date;
 
-  @UpdateDateColumn({ name: 'updated_at', nullable: false })
+  @UpdateDateColumn({ name: 'updatedAt', nullable: false })
   updatedAt: Date;
 
   @ManyToOne(() => DiaryEntity, (diary) => diary.fileRelation, {
@@ -31,6 +31,6 @@ export class DiaryFileEntity {
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   })
-  @JoinColumn({ name: 'diary_id', referencedColumnName: 'diaryId' })
+  @JoinColumn({ name: 'diaryId', referencedColumnName: 'diaryId' })
   diaryIdRelation: DiaryEntity;
 }
